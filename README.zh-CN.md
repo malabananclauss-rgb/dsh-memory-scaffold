@@ -44,10 +44,13 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 
 ## 安装
 
-**方式 A — DSH 插件（推荐，含斜杠命令＋Agent 工具）**
+**方式 A — 从仓库安装（推荐，含斜杠命令＋Agent 工具）**
 
 ```sh
-dsh plugin --profile web add <本包目录的绝对路径>
+dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
+# 或先 clone 再指向目录：
+#   git clone https://github.com/malabananclauss-rgb/dsh-self
+#   dsh plugin --profile <你的 profile> add ./dsh-self
 # 或在 DSH Web 的插件页 / plugin_manager 用 install_bundle 安装本地目录
 ```
 

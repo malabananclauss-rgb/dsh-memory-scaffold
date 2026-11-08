@@ -64,10 +64,13 @@ with.
 
 ## Install
 
-**A — as a DSH plugin (slash commands + agent tools)**
+**A — install from the repository (recommended; slash commands + agent tools)**
 
 ```sh
-dsh plugin --profile web add <absolute path to this package>
+dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
+# or clone and point at the directory:
+#   git clone https://github.com/malabananclauss-rgb/dsh-self
+#   dsh plugin --profile <your profile> add ./dsh-self
 # or install the local directory from the Web Plugins page / plugin_manager install_bundle
 ```
 
