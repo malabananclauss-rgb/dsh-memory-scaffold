@@ -1,0 +1,14 @@
+# dsh-self — installable DSH bundle patch.
+# The row id is stable; user overrides should target it by id.
+- insert:
+    - id: dsh-self
+      name: 'dsh-self'
+      config:
+        memoryDir: memory
+        hotMaxChars: 800
+        hotMaxBytes: 2048
+        contextBudgetChars: 32000
+        contextShareNoticePercent: 3
+        contextShareWarnPercent: 10
+        commands: true
+        tools: true

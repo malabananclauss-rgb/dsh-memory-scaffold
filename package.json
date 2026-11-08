@@ -1,0 +1,53 @@
+{
+  "name": "dsh-self",
+  "version": "0.1.1",
+  "description": "Scaffold for layered agent memory: four-layer memory files, judgment cards, a model-handoff package and compression review. Format-locked, zero-dependency, JSON-first.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./core": "./lib/core.js",
+    "./format": "./lib/format.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "bin": {
+    "dsh-self": "./bin/dsh-self.mjs"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "lib",
+    "bin",
+    "templates",
+    "locale",
+    "icon.svg",
+    "docs",
+    "examples",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "selftest": "node test/selftest.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "memory",
+    "judgment",
+    "handoff",
+    "scaffold",
+    "agent-memory"
+  ]
+}

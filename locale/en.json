@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Semi-individual scaffold",
+    "description": "Scaffold layered agent memory: four-layer memory files, judgment cards, model-handoff package and compression review. Format-locked, JSON-first and dependency-free."
+  }
+}
