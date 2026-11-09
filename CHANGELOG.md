@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.2]
+
+- **fix(tools): workspace discovery after a host restart.** When the `workingDirectory`
+  service is unavailable, the agent tools used the host process cwd and reported
+  `NOT_INITIALIZED`. They now walk upwards from that cwd to the first directory owning
+  `memory/`; a resolved workspace is never re-pointed.
+- **fix(review):** `CARD_COUNT_MISMATCH` compared the total judgment count with the card
+  count. It now reports only *common/instinct* judgments that lack a card; candidates need
+  no card.
+
+
 All notable changes to the dsh-self package and its scaffold templates.
 
 Version scheme:
