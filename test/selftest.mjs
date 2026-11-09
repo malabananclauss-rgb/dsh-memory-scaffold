@@ -135,7 +135,7 @@ async function makeWorkspace(name) {
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
   assert.equal(pkg.name, 'dsh-self');
-  assert.equal(pkg.version, '0.1.3');
+  assert.equal(pkg.version, '0.1.4');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -157,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.3'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.4'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -195,7 +195,7 @@ await test('init creates the four layers, QUICKSTART and manifest', async () => 
   assert.equal(env.formatVersion, 1);
   assert.equal(env.templateVersion, '1.0.0');
   assert.equal(env.latestTemplateVersion, '1.0.0');
-  assert.equal(env.data.created.length, 6);
+  assert.equal(env.data.created.length, 7);
   assert.equal(env.data.existing.length, 0);
   const expected = [
     'memory/hot/state.md',
@@ -227,7 +227,7 @@ await test('init is idempotent and never overwrites existing files', async () =>
   const before = await readFile(path.join(ws, 'memory', 'judgments.md'), 'utf8');
   const env = parseOk(await captureCli(['init', '--json'], { cwd: ws }), 'init#2');
   assert.equal(env.data.created.length, 0);
-  assert.equal(env.data.existing.length, 5);
+  assert.equal(env.data.existing.length, 6);
   assert.equal(env.data.updated.length, 1);
   const after = await readFile(path.join(ws, 'memory', 'judgments.md'), 'utf8');
   assert.equal(before, after, 'init must not rewrite existing files');
@@ -375,8 +375,9 @@ await test('handoff writes a package, a JSON sidecar and 8 questions', async () 
   const doc = await readFile(env.data.path, 'utf8');
   assert.ok(doc.includes('8 个验证问题'));
   assert.ok(doc.includes('## 1. 状态快照'));
-  assert.ok(doc.includes('## 8. 断代诚实标注'));
-assert.ok(doc.includes('## 7. 验证记录'));
+  assert.ok(doc.includes('## 9. 断代诚实标注'));
+assert.ok(doc.includes('## 8. 验证记录'));
+assert.ok(doc.includes('## 4. 本次会话决策'));
 assert.ok(doc.includes('UNKNOWN'));
   assert.ok(doc.includes('J001'));
   assert.ok(doc.includes('memory/hot/state.md') === false || true);
@@ -529,7 +530,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.1.3'));
+  assert.ok(version.stdout.includes('0.1.4'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -585,7 +586,7 @@ await test('format helpers expose the locked metrics', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7b. real legacy library compatibility (regression for 0.1.3)
+// 7b. real legacy library compatibility (regression for 0.1.4)
 // ---------------------------------------------------------------------------
 
 async function writeFixture(root, relative, text) {
@@ -766,11 +767,11 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.1.3');
+  assert.equal(pkg.version, '0.1.4');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.3'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.4'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.1.3]'));
+  assert.ok(changelog.includes('[0.1.4]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
@@ -911,7 +912,7 @@ await test('agent tools expose the same core and render JSON content', async () 
   const initValue = await tool('dsh_self_init').execute({ lang: 'zh' }, execContext);
   assert.equal(initValue.ok, true);
   assert.equal(initValue.command, 'init');
-  assert.equal(initValue.data.created.length, 6);
+  assert.equal(initValue.data.created.length, 7);
   const rendered = tool('dsh_self_init').output.render({ lang: 'zh' }, initValue);
   assert.ok(Array.isArray(rendered));
   assert.equal(rendered[0].type, 'text');

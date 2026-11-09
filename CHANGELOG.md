@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.4]
+
+- **decisions.md: session decisions in the handoff.** New fifth file `memory/decisions.md`
+  records what *this session* settled (decision / why / status). `handoff` now carries those
+  entries into the package as section 4, so a model swap keeps the session-level choices as
+  well as the long-lived judgments. Without entries the section says so explicitly instead of
+  silently omitting them.
+- Section numbering is now 1 state → 2 judgments → 3 cards → 4 decisions → 5 pending →
+  6 verification → 7 replay → 8 validation → 9 honesty.
+- `init` creates `decisions.md` (idempotent, never overwrites), stats include `decisions`.
+- The JSON sidecar gains `decisions` entries.
+
+
 ## [0.1.3]
 
 - **handoff: validation record.** Every package now includes a machine-check section

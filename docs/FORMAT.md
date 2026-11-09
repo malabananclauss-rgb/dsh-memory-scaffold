@@ -237,12 +237,15 @@ Filename pattern (in `handoffs/`): `handoff-YYYYMMDD-HHmmss.md` (local time;
    expanded**; candidates are counted (`- candidate_rows: N`) to keep the package bounded;
 4. judgment cards: `### <id> <title>` plus card fields — only cards of expanded
    (common/instinct) judgments; the rest are counted (`- other_cards: N`);
-5. unfinished / not-yet-persisted items;
-6. eight verification questions;
-7. replay questions generated from top judgments;
-8. **validation record**: machine checks (hot size vs limits, judgment/card parse status,
+5. **session decisions**: entries from `decisions.md` (title + decision/why/status fields);
+   when the file has no entries the section says so — an empty file is not "no decisions",
+   it is "not written down";
+6. unfinished / not-yet-persisted items;
+7. eight verification questions;
+8. replay questions generated from top judgments;
+9. **validation record**: machine checks (hot size vs limits, judgment/card parse status,
    format issues, warning codes, "no human sign-off" note);
-9. honest discontinuity note and handoff history — unread/unverified content must be marked
+10. honest discontinuity note and handoff history — unread/unverified content must be marked
    `UNKNOWN`, never invented.
 
 The question texts are not part of the lock (they may be improved in a minor

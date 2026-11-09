@@ -28,7 +28,7 @@ with.
 
 | Command | What it does |
 | --- | --- |
-| `init` | Creates the four-layer structure — `hot/state.md`, `index.md`, `judgments.md`, `judgments-cards.md` — plus templates and a `QUICKSTART.md`. Idempotent: adds missing files, **never overwrites** what you wrote. |
+| `init` | Creates the four-layer structure — `hot/state.md`, `index.md`, `judgments.md`, `judgments-cards.md`, `decisions.md` — plus templates and a `QUICKSTART.md`. Idempotent: adds missing files, **never overwrites** what you wrote. |
 | `judge` | Adds one judgment card: conclusion / why / failure-counterexample / unfinished / source. Auto-numbered (J001…), written to both the index table and the card file. |
 | `handoff` | Reads your memory, writes a continuation package plus **8 verification questions**, and a machine-readable `.json` sidecar for other plugins. Run it before switching model or session. |
 | `review` | Compression review: hot size (>800 chars / >2 KB warning), context-share estimate, not-yet-persisted items, judgments/cards consistency, broken index pointers, template drift. |
@@ -173,6 +173,7 @@ memory/
 ├── index.md
 ├── judgments.md
 ├── judgments-cards.md
+├── decisions.md
 ├── QUICKSTART.md
 ├── handoffs/handoff-<ts>.md + .json
 └── .dsh-self/manifest.json

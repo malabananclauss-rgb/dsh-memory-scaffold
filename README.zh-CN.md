@@ -22,7 +22,7 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 
 | 命令 | 作用 |
 | --- | --- |
-| `init` | 在工作区建四层结构：`hot/state.md`（状态）、`index.md`（索引）、`judgments.md`（判断库）、`judgments-cards.md`（判断卡）＋模板＋`QUICKSTART.md`。幂等：只补缺失文件，**从不覆盖已写内容**。 |
+| `init` | 在工作区建四层结构：`hot/state.md`（状态）、`index.md`（索引）、`judgments.md`（判断库）、`judgments-cards.md`（判断卡），外加 `decisions.md`（本次会话决策）＋模板＋`QUICKSTART.md`。幂等：只补缺失文件，**从不覆盖已写内容**。 |
 | `judge` | 新增一条判断卡：结论／为什么／失败反例／未完成／来源；自动编号（J001…），同时写入 judgments 与 cards 两张表。 |
 | `handoff` | 读你的记忆，生成「接续包」文档＋ **8 个验证问题**，并写一份同名 `.json` 侧车文件给其他插件读。换模型／换会话前跑。 |
 | `review` | 压缩审查：hot 大小（>800 字 / 2KB 告警）、上下文占比提示、待落盘项清单、判断库/卡一致性、失效索引指针、模板版本漂移。 |
@@ -142,6 +142,7 @@ memory/
 ├── index.md
 ├── judgments.md
 ├── judgments-cards.md
+├── decisions.md
 ├── QUICKSTART.md
 ├── handoffs/handoff-<ts>.md + .json
 └── .dsh-self/manifest.json
