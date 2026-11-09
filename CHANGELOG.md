@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0]
+
+- **Renamed the package and repository** from `dsh-self` to **`dsh-memory-scaffold`**
+  (the npm name `dsh-self` is occupied by an unrelated project; the new name was
+  available). Version 0.2.0 is a breaking release because the package name and
+  repository URL changed.
+- **Compatibility is unchanged:** the CLI binary is still `dsh-self`, the slash
+  commands (`/self-init`, `/self-judge`, `/self-handoff`, `/self-review`,
+  `/self-ruler`), agent tools (`dsh_self_*`), `.dsh-self/` directory, template
+  markers and format schemas (`dsh-self/memory`, `dsh-self/handoff`) are kept as-is.
+- README/docs/install commands now use the new repository and tag `v0.2.0`;
+  GitHub redirects the old URLs. Install: `dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0`.
+- This release rolls up the unreleased 0.1.7 ruler work (unique two-question ruler:
+  transferability × continuability) and the 0.1.6 compact handoff / `--focus` work.
+
 ## [0.1.7]
 
 - **`ruler`: the two-question ruler (`/self-ruler` + `dsh_self_ruler`).**
@@ -12,7 +27,7 @@
   memory disappears with the body) — plus one line for the biggest risk and a
   copyable prompt to paste into any AI. It is a local template + keyword heuristic:
   **zero model calls, zero network, no file writes**, and needs no memory directory.
-  Localized `zh`/`en`. (0.1.7 is not released yet, so this correction stays inside 0.1.7.)
+  Localized `zh`/`en`. (0.1.7 was not released separately; its content ships in 0.2.0.)
 
 - CLI: `dsh-self ruler [--situation <text>] [--context <text>] [--lang zh|en] [--json]`,
   or pass the situation positionally (`dsh-self ruler 我该不该换模型`).
@@ -115,7 +130,7 @@
   memory; the accidental row/card was removed and the guard prevents a repeat.
 
 
-All notable changes to the dsh-self package and its scaffold templates.
+All notable changes to the dsh-memory-scaffold package (formerly `dsh-self`) and its scaffold templates.
 
 Version scheme:
 

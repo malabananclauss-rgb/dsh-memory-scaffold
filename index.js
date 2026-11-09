@@ -1,4 +1,4 @@
-// Cordis Host plugin for the dsh-self scaffold.
+// Cordis Host plugin for the dsh-memory-scaffold package (CLI binary: dsh-self).
 //
 // Surfaces (both share lib/core.js and lib/plugin.js):
 //   - 5 human slash commands: /self-init /self-judge /self-handoff /self-review /self-ruler

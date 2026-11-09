@@ -1,7 +1,7 @@
-# SELFTEST — dsh-self 0.1.7
+﻿# SELFTEST — dsh-memory-scaffold 0.2.0
 
-日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问）
-包版本：0.1.7 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
+日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问；0.2.0 改名 dsh-memory-scaffold）
+包版本：0.2.0 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
 环境：Windows，DeepSeek Harness 自带 Node **v24.21.0**（`C:\Users\Lenovo\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）
 测试目录：`D:\DSH\products\dsh-self\test\.tmp`（测试结束已清理）
 
@@ -15,7 +15,8 @@
 > 0.1.5 修复：workingDirectory 不再一次性 ctx.get、不再回退宿主 process.cwd；回退链 session.header.cwd → 向上找 memory/；DIRECTORY_UNAVAILABLE 与 NOT_INITIALIZED 分离（见 §2 工作目录解析）。
 > 0.1.6 新增：`handoff --compact`（方向+hot+活判断精简+聚焦卡+未完成+验证问题，6–10 KB）与 `--focus 主题`（按卡标题/结论/正文匹配，每主题最多 2 张卡，去重，只配 --compact）。
 > 0.1.7 新增：`ruler` / `/self-ruler` / `dsh_self_ruler`——独特两问（可迁移性/可接续性），本地模板＋关键词启发式，零模型调用、不写文件；输出两条具体追问＋可复制提示词＋最大风险点。
-> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.1.7 代码。
+> 0.2.0 改名：package/仓库名 `dsh-self` → `dsh-memory-scaffold`（npm `dsh-self` 被占）；CLI 二进制、斜杠命令、工具名、`.dsh-self/` 目录与 format schema 保持不变。
+> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.2.0 代码。
 
 ---
 
@@ -182,8 +183,8 @@ node bin/dsh-self.mjs review --workspace D:\DSH --json   # 只读真实库
 
 ## 11. 遗留 / 交给青
 
-1. **重启/重载 Host** 让 0.1.7 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
+1. **重启/重载 Host** 让 0.2.0 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
 2. 重启后在真实 profile 再跑一次 `/self-review` 或 `dsh_self_review`，确认工具层同样不再报
    "not lossless JSON"、pending 输出为聚合后的短 JSON。
-3. 发布：npm/GitHub Release `v0.1.2` 与 CHANGELOG 对齐（市场提交由青决定）。
+3. 发布：npm/GitHub Release `v0.2.0` 与 CHANGELOG 对齐（市场提交由青决定）。
 4. 已知限制不变：无自动注入、占比为估算、单写者、手动模板合并、仅 format v1；老库 5 列表只读（写入需手工升级表头）。

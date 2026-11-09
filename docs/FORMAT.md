@@ -1,8 +1,8 @@
-# dsh-self FORMAT v1 (locked)
+# dsh-memory-scaffold FORMAT v1 (locked; originally dsh-self)
 
 Status: **format v1 is locked**. This document is the human-readable contract;
 `lib/format.js` is the canonical implementation. Third-party plugins that want to
-interoperate with dsh-self memory directories must follow this document.
+interoperate with dsh-memory-scaffold memory directories must follow this document.
 
 The point of the lock is compatibility, not control: the layout, field names and
 enum values are fixed so that independent tools can read and write the same

@@ -1,16 +1,16 @@
 {
-  "name": "dsh-self",
-  "version": "0.1.7",
+  "name": "dsh-memory-scaffold",
+  "version": "0.2.0",
   "description": "Scaffold for layered agent memory: memory files, judgment cards, full/compact model handoff, two-question ruler and compression review. Format-locked, zero-dependency, JSON-first.",
   "license": "MIT",
   "author": "malabananclauss-rgb",
-  "homepage": "https://github.com/malabananclauss-rgb/dsh-self#readme",
+  "homepage": "https://github.com/malabananclauss-rgb/dsh-memory-scaffold#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/malabananclauss-rgb/dsh-self.git"
+    "url": "git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold.git"
   },
   "bugs": {
-    "url": "https://github.com/malabananclauss-rgb/dsh-self/issues"
+    "url": "https://github.com/malabananclauss-rgb/dsh-memory-scaffold/issues"
   },
   "type": "module",
   "main": "./index.js",

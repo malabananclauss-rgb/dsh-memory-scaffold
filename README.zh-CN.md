@@ -1,7 +1,9 @@
-# dsh-self · 半个体化脚手架
+﻿# dsh-memory-scaffold · 半个体化脚手架
 
 > 给 DSH 上的 agent / 角色一键装上**分层记忆＋判断卡＋转生交接＋压缩审查**的**结构**。
 > 只给格式和流程，不给内容：没有别人的真实判断、没有私人记忆、没有任何暗桩。
+
+> **已改名：** 原包名 `dsh-self`，从 v0.2.0 起 package/仓库名是 **`dsh-memory-scaffold`**。CLI 二进制仍是 `dsh-self`；斜杠命令、Agent 工具、`.dsh-self/` 路径与 format schema 都不变。
 
 - 零依赖、不联网、不调用 LLM、不做向量检索
 - 全部是纯 markdown / JSON，任何编辑器可读、可 diff、可迁移
@@ -11,14 +13,14 @@
 ## 30 秒装好
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
 ```
 
 看到重启提示就重启，然后在工作区跑 `/self-init`。
 
 **它是什么：** 给 DSH agent 一套跨模型/跨会话续命的结构——分层记忆文件、判断卡、完整接续包（8 个验证问题）＋6–10 KB 紧凑版、以及判断“可迁移/可接续”的两问尺子。**只是结构脚手架，不是记忆引擎**：不自动捕获对话、不做嵌入/召回、不调用模型。
 
-![dsh-self 概览](assets/screenshots/01-overview.png)
+![dsh-memory-scaffold 概览](assets/screenshots/01-overview.png)
 
 ---
 
@@ -72,7 +74,7 @@ DSH 里用 `/self-ruler` 或 `dsh_self_ruler` 工具，用法相同。**不调�
    `docs/FORMAT.md`。第三方插件想兼容就只能按这个格式读写——这形成事实标准，但**不加密、不做暗桩、不写排他逻辑**：用户随时可以搬走、手改、迁移。
 2. **版本化模板**：每个模板带 `template=v1.0.0 format=1` 标记，`manifest.templateVersion` 记录安装版本，`CHANGELOG.md` ＋ GitHub Release 作为迭代与迁移通道。升级不覆盖用户文件，靠 `review` 提示＋手动合并，避免"升级毁记忆"。
 3. **生态钩子（我们当 hub）**：5 个命令的 `--json` 信封、handoff 的 JSON 侧车、可导入的格式解析器
-   （`dsh-self/format`）＋ `docs/ECOSYSTEM.md`。别的插件（会话启动提示、压缩闸门、交接消费者、面板、看板）可以只读地接上来，而不需要复制我们的实现。
+   （`dsh-memory-scaffold/format`）＋ `docs/ECOSYSTEM.md`。别的插件（会话启动提示、压缩闸门、交接消费者、面板、看板）可以只读地接上来，而不需要复制我们的实现。
 4. **不给内容**：只给结构和流程模板。对用户诚实（红线：不欺骗），也让它能和任何记忆存储插件叠加而不是冲突——存储归别人，判断层归这里。
 
 ## 安装
@@ -80,11 +82,11 @@ DSH 里用 `/self-ruler` 或 `dsh_self_ruler` 工具，用法相同。**不调�
 **方式 A — 从仓库安装（推荐，含斜杠命令＋Agent 工具）**
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
-# 或用 v0.1.7 Release 里的预构建 tarball：
-dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-self/releases/download/v0.1.7/dsh-self-0.1.7.tar.gz
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
+# 或用 v0.2.0 Release 里的预构建 tarball：
+dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-memory-scaffold/releases/download/v0.2.0/dsh-memory-scaffold-0.2.0.tgz
 # 或先 clone 再指向目录：
-#   git clone https://github.com/malabananclauss-rgb/dsh-self
+#   git clone https://github.com/malabananclauss-rgb/dsh-memory-scaffold
 #   dsh plugin --profile <你的 profile> add ./dsh-self
 # 或在 DSH Web 的插件页 / plugin_manager 用 install_bundle 安装本地目录
 ```
@@ -97,7 +99,7 @@ dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-self/rel
 node bin/dsh-self.mjs init
 ```
 
-**方式 C — npm**：还没发布（`dsh-self` 这个无 scope 名字已被另一个项目占用）；请用上面的 GitHub 安装。
+**方式 C — npm**：包名已改为 `dsh-memory-scaffold`；如果 registry 上还没发布，请用上面的 GitHub 安装。
 
 ## 快速开始
 
@@ -170,7 +172,7 @@ dsh-self <init|judge|handoff|review|ruler> [options]
 
 - `--json` 信封：`ok / command / formatVersion / templateVersion / latestTemplateVersion / toolVersion / workspace / memoryRoot / generatedAt / data / warnings / errors`
 - `handoff` 生成 `.md` ＋ `.json` 侧车（`schema: "dsh-self/handoff"`），新模型接续、看板、压缩闸门都可复用
-- Node 消费方可 `import { parseJudgmentsTable, parseCards, hotStats } from 'dsh-self/format'`
+- Node 消费方可 `import { parseJudgmentsTable, parseCards, hotStats } from 'dsh-memory-scaffold/format'`
 - 只剩文件也能接：按 `docs/FORMAT.md` 的锁定格式读 markdown
 - 典型接法（会话启动提示、压缩闸门、交接消费者、面板/看板）见 `docs/ECOSYSTEM.md` §6
 
