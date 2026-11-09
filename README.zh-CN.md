@@ -5,7 +5,7 @@
 
 - 零依赖、不联网、不调用 LLM、不做向量检索
 - 全部是纯 markdown / JSON，任何编辑器可读、可 diff、可迁移
-- 4 个命令全部支持 `--json`，文件格式公开锁定 —— 其他插件可以直接读、可以直接接
+- 5 个命令全部支持 `--json`，文件格式公开锁定 —— 其他插件可以直接读、可以直接接
 - 模板版本化（`template=v1.0.0`＋CHANGELOG），升级不覆盖用户文件
 
 ---
@@ -16,7 +16,7 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 
 **「我知道要让 AI 有记忆连续性，但不知道该建哪些文件、每个文件放什么、什么时候写、什么时候压、换模型时交什么。」**
 
-这个包卖的不是记忆内容，是**记忆的骨架和流程**：四个文件、四个动作，照着做就能从"每次重新解释自己"变成"分层记忆＋可验证交接"。
+这个包卖的不是记忆内容，是**记忆的骨架和流程**：四个文件、五个动作，照着做就能从"每次重新解释自己"变成"分层记忆＋可验证交接"。
 
 ## 它给什么
 
@@ -26,6 +26,27 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 | `judge` | 新增一条判断卡：结论／为什么／失败反例／未完成／来源；自动编号（J001…），同时写入 judgments 与 cards 两张表。 |
 | `handoff` | 读你的记忆，生成「接续包」文档＋ **8 个验证问题**，并写一份同名 `.json` 侧车文件给其他插件读。换模型／换会话前跑。`--compact` 出 6–10 KB 紧凑版（方向+hot+活判断精简+按 `--focus` 选卡+未完成+验证问题）；`--focus` 按主题挑判断卡。 |
 | `review` | 压缩审查：hot 大小（>800 字 / 2KB 告警）、上下文占比提示、待落盘项清单、判断库/卡一致性、失效索引指针、模板版本漂移。 |
+| `ruler` | 独特两问：把一条判断变成两条针对性的具体追问（① 换一个版本的我来用还成立吗＝可迁移性 ② 明天全忘后还能被捡回来吗＝可接续性）＋可直接复制的提示词＋最大风险点。**本地模板＋关键词启发式，零模型调用、不联网、不写文件。** |
+
+### 独特两问：可迁移性 × 可接续性（零模型调用）
+
+把一条想法变成可继承的判断之前，先跑 `ruler`。它把**你的**原话变成两条具体追问，
+而不是复读别人也说过的话：
+
+1. **可迁移性**：这条判断，换一个版本的我来用，还成立吗？它依赖哪些资源/时间/环境/模型条件？
+   只对“当时的我”成立的，不是判断，是处境。
+2. **可接续性**：如果明天我全忘了，这条判断还能被捡回来吗？是能被写下来、被别人或下一版捡回，
+   还是只靠“我记得”？靠记忆的，会随身体一起消失。
+
+```bash
+dsh-self ruler --situation "我该不该把发布交给青决定？" --context "本周内要给答复。"
+dsh-self ruler 我该不该换模型                # 直接写在命令后也可
+```
+
+输出还包含一行「最大风险点」和一段可直接复制的提示词（粘到任何 AI，或自己逐问回答）。
+DSH 里用 `/self-ruler` 或 `dsh_self_ruler` 工具，用法相同。**不调用模型、不联网、不写任何文件**——判断仍然是你的。
+
+适用：不可逆决定、带代价的承诺、评价别人、花钱、要求别人承担后果。
 
 ## 它不是什么（诚实边界）
 
@@ -38,7 +59,7 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 1. **格式锁定（软锁定）**：目录结构、表头列名与列序、状态枚举、卡字段名、机器标记全部写进
    `docs/FORMAT.md`。第三方插件想兼容就只能按这个格式读写——这形成事实标准，但**不加密、不做暗桩、不写排他逻辑**：用户随时可以搬走、手改、迁移。
 2. **版本化模板**：每个模板带 `template=v1.0.0 format=1` 标记，`manifest.templateVersion` 记录安装版本，`CHANGELOG.md` ＋ GitHub Release 作为迭代与迁移通道。升级不覆盖用户文件，靠 `review` 提示＋手动合并，避免"升级毁记忆"。
-3. **生态钩子（我们当 hub）**：4 个命令的 `--json` 信封、handoff 的 JSON 侧车、可导入的格式解析器
+3. **生态钩子（我们当 hub）**：5 个命令的 `--json` 信封、handoff 的 JSON 侧车、可导入的格式解析器
    （`dsh-self/format`）＋ `docs/ECOSYSTEM.md`。别的插件（会话启动提示、压缩闸门、交接消费者、面板、看板）可以只读地接上来，而不需要复制我们的实现。
 4. **不给内容**：只给结构和流程模板。对用户诚实（红线：不欺骗），也让它能和任何记忆存储插件叠加而不是冲突——存储归别人，判断层归这里。
 
@@ -86,14 +107,17 @@ node bin/dsh-self.mjs judge \
 node bin/dsh-self.mjs handoff --json
 node bin/dsh-self.mjs handoff --compact --focus "磨镜,好名"
 
-# 5. 每周或压缩前
+# 5. 重大决定前：三个具体追问，零模型调用
+dsh-self ruler --situation "我该不该接这个任务？谁承担代价？"
+
+# 6. 每周或压缩前
 node bin/dsh-self.mjs review
 ```
 
 ## 命令参考
 
 ```
-dsh-self <init|judge|handoff|review> [options]
+dsh-self <init|judge|handoff|review|ruler> [options]
 ```
 
 通用：`-w/--workspace <dir>`（默认当前目录）、`--dir <name>`（记忆目录，默认 `memory`）、
@@ -105,6 +129,7 @@ dsh-self <init|judge|handoff|review> [options]
 | `judge` | `--conclusion` `--why` `--failure` `--unfinished` `--source`（必填）；`--boundary` `--scene` `--status candidate\|common\|instinct\|refuted\|archived`（可选） |
 | `handoff` | `--out <file.md>`（可选；默认 `memory/handoffs/handoff-<时间戳>.md`）；`--compact` 紧凑版（目标 6–10 KB）；`--focus 主题1,主题2` 按卡标题→结论→正文匹配，每主题最多 2 张卡，只能配 `--compact` |
 | `review` | `--context-budget <字符数>`、`--fail-on-warn`（CI 用，有可操作告警时退出码 1） |
+| `ruler` | `--situation <处境/决策>`（也可直接跟一句话）、`--context <补充背景>`、`--lang zh\|en` |
 
 退出码：`0` 成功；`1` `--fail-on-warn`；`2` 用法错误；`3` 运行/格式错误。
 完整 JSON 契约见 `docs/ECOSYSTEM.md`。
@@ -113,9 +138,9 @@ dsh-self <init|judge|handoff|review> [options]
 
 装上插件后：
 
-- 斜杠命令：`/self-init`、`/self-judge`、`/self-handoff`、`/self-review`（参数同 CLI，去掉 `--workspace/--dir`，用当前 agent 的工作区）
-- Agent 工具：`dsh_self_init`、`dsh_self_judge`、`dsh_self_handoff`、`dsh_self_review`
-- 工具会占一点提示词空间（4 个 schema）。只想用斜杠命令的话，在行 config 里设 `tools: false`。
+- 斜杠命令：`/self-init`、`/self-judge`、`/self-handoff`、`/self-review`、`/self-ruler`（参数同 CLI，去掉 `--workspace/--dir`，用当前 agent 的工作区）
+- Agent 工具：`dsh_self_init`、`dsh_self_judge`、`dsh_self_handoff`、`dsh_self_review`、`dsh_self_ruler`
+- 工具会占一点提示词空间（5 个 schema）。只想用斜杠命令的话，在行 config 里设 `tools: false`。
 
 行配置（`cordis.patch.yml` 的 `config`，可被用户 patch 覆盖）：
 
@@ -190,14 +215,14 @@ templates/v1/{zh,en}/    版本化模板
 docs/FORMAT*.md          格式锁定契约（中英）
 docs/ECOSYSTEM.md        --json 与生态对接契约
 examples/consumer.mjs    只读消费示例
-test/selftest.mjs        自测（51 项）
+test/selftest.mjs        自测（59 项）
 SELFTEST.md              自测记录
 ```
 
 ## 开发与自测
 
 ```sh
-node test/selftest.mjs        # 51/51；会创建 test/.tmp 并在结束时清理
+node test/selftest.mjs        # 59/59；会创建 test/.tmp 并在结束时清理
 SI_KEEP_TMP=1 node test/selftest.mjs   # 保留测试目录排查
 ```
 

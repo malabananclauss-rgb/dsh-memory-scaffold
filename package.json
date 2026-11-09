@@ -1,6 +1,6 @@
 {
   "name": "dsh-self",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Scaffold for layered agent memory: four-layer memory files, judgment cards, a model-handoff package and compression review. Format-locked, zero-dependency, JSON-first.",
   "license": "MIT",
   "type": "module",

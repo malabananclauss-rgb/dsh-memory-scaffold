@@ -28,10 +28,11 @@ dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
 
 The problem with AI memory isn't recall — it's that **after a model swap, it's no longer *it*.**
 
-dsh-self ships four small things:
+dsh-self ships five small things:
 - **Four layers**: state, index, judgments, judgment cards
 - **Judgment cards**: the conclusion is cheap — why it holds, where it fails, what's still unresolved
 - **Handoff package**: run it before switching models; the new one answers 8 verification questions
+- **Two-question ruler**: for a judgment, ask "would another version of me still use it?" and "could it be recovered if I forgot everything?" — plus a copyable prompt (zero model calls)
 - **Compression review**: warns when state exceeds 800 chars
 
 Zero dependencies, plain markdown/JSON, no encryption, no lock-in — your data moves with you.

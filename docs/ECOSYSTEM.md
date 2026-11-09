@@ -20,13 +20,16 @@ Guiding rules for consumers:
 ## 1. CLI contract
 
 ```
-dsh-self <init|judge|handoff|review> [options] --json
+dsh-self <init|judge|handoff|review|ruler> [options] --json
 ```
 
 Global options: `--workspace <dir>`, `--dir <memory-dir>`, `--json`,
 `--help`/`--version`. Command-specific options are listed in `README.md`;
 for `handoff` they are `--out <file.md>`, `--compact`, and `--focus <topic1,topic2>`
-(`--focus` requires `--compact`; using it alone is a `USAGE` error).
+(`--focus` requires `--compact`; using it alone is a `USAGE` error). For `ruler`
+they are `--situation <text>`, `--context <text>`, and `--lang zh|en`; the situation may
+also be passed positionally. `ruler` is stateless: it needs no initialized memory, makes
+no model calls and writes no files.
 
 ### Exit codes
 
@@ -146,6 +149,31 @@ The `.json` sidecar at `jsonPath` is the preferred machine-readable handoff
 (written by the same command, schema `dsh-self/handoff`, documented in
 `docs/FORMAT.md` §9.2).
 
+### `ruler`
+
+```json
+{
+  "situation": "Should I take this task?",
+  "context": "The deadline is Friday.",
+  "lang": "en",
+  "questions": [
+    { "title": "1. Would this judgment still hold if another version of me used it?", "followups": ["…", "…", "…"] },
+    { "title": "2. If I forgot everything tomorrow, could this judgment be picked up again?", "followups": ["…", "…", "…"] }
+  ],
+  "prompt": "You are my judgment coach… (copyable fenced prompt)",
+  "risk": "the biggest risk, one line",
+  "risks": ["…"],
+  "keywords": ["…"],
+  "modelCalls": 0,
+  "memoryRoot": "D:\\work\\memory"
+}
+```
+
+`ruler` is deterministic and stateless: no memory directory is required, no files are
+written and `modelCalls` is always 0. Inputs longer than 4,000 characters are truncated
+with the `RULER_INPUT_TRUNCATED` warning. `lang` defaults to the memory manifest language
+when one exists, otherwise `zh`.
+
 ### `review`
 
 ```json
@@ -184,7 +212,7 @@ Warning codes: `HOT_OVERSIZE`, `HOT_BYTES_OVERSIZE`, `HOT_MISSING`,
 `JUDGMENTS_MISSING`, `CARDS_MISSING`, `MANIFEST_MISSING`,
 `TEMPLATE_UPGRADE_AVAILABLE`, `CARD_COUNT_MISMATCH`, `JUDGMENTS_FORMAT_ISSUE`,
 `JUDGMENTS_FORMAT_ISSUES`, `INDEX_FORMAT_ISSUE`, `CONTEXT_SHARE_HIGH`,
-`DIRECTION_MISSING`.
+`DIRECTION_MISSING`, `RULER_INPUT_TRUNCATED`.
 
 Pending item types: `hot_todo`, `candidate_judgment`, `missing_card`,
 `orphan_card`, `incomplete_card`, `broken_pointer`, `no_handoff`,
@@ -227,7 +255,7 @@ tables, Chinese status aliases, Chinese card labels, multi-pointer index cells
 
 ## 4. DSH surfaces
 
-When the bundle is installed, the same four commands are available without the
+When the bundle is installed, the same five commands are available without the
 CLI:
 
 | CLI | DSH slash command | Agent tool |
@@ -236,6 +264,7 @@ CLI:
 | `judge` | `/self-judge` | `dsh_self_judge` |
 | `handoff` | `/self-handoff` | `dsh_self_handoff` |
 | `review` | `/self-review` | `dsh_self_review` |
+| `ruler` | `/self-ruler` | `dsh_self_ruler` |
 
 Slash commands accept the same options (without `--workspace`/`--dir`: they use
 the agent's workspace). Agent tools take the same fields as tool arguments and

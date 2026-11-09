@@ -1,4 +1,4 @@
-# dsh-self
+﻿# dsh-self
 
 > A scaffold that gives a DSH agent or role **layered memory + judgment cards +
 > model handoff + compression review** in one command — structure only, no content.
@@ -21,7 +21,7 @@ which files to keep, what goes in each, when to write, when to compact, and what
 to hand over when switching models.
 
 This package is not another store. It is the **skeleton and ritual**: four files,
-four operations, and a machine-readable contract that other plugins can integrate
+five operations, and a machine-readable contract that other plugins can integrate
 with.
 
 ## What you get
@@ -32,6 +32,30 @@ with.
 | `judge` | Adds one judgment card: conclusion / why / failure-counterexample / unfinished / source. Auto-numbered (J001…), written to both the index table and the card file. |
 | `handoff` | Reads your memory, writes a continuation package plus **8 verification questions**, and a machine-readable `.json` sidecar for other plugins. Run it before switching model or session. `--compact` emits a 6–10 KB package (direction + hot + condensed live judgments + `--focus` cards + pending + questions); `--focus` selects judgment cards by topic. |
 | `review` | Compression review: hot size (>800 chars / >2 KB warning), context-share estimate, not-yet-persisted items, judgments/cards consistency, broken index pointers, template drift. |
+| `ruler` | The two-question ruler: turns a judgment into two concrete follow-ups — would it survive another version of me (transferability), and could it be recovered if I forgot everything tomorrow (continuability) — plus a copyable prompt for any AI and the biggest risk. Local template + keyword heuristic — **zero model calls, no network, no writes**. |
+
+### Two-question ruler: transferability × continuability (no model calls)
+
+Use the ruler before turning an insight into a judgment. It turns **your** wording into two concrete
+follow-ups instead of repeating borrowed wisdom:
+
+1. **Transferability**: would this judgment still hold if another version of me used it? Which resources / time /
+   environment / model conditions does it depend on? If it only holds for "me at that moment", it is a situation,
+   not a judgment.
+2. **Continuability**: if I forgot everything tomorrow, could this judgment be picked up again — written down and
+   recoverable by the next version, or only "I remember"? Memory disappears with the body.
+
+```bash
+dsh-self ruler --situation "我该不该把发布交给青决定？" --context "本周内要给答复。"
+dsh-self ruler 我该不该换模型                # positional form
+```
+
+It also returns one line for the biggest risk and a fenced **copyable prompt** you can paste into
+any AI (or answer yourself). DSH users get the same through `/self-ruler` and `dsh_self_ruler`.
+
+Use it for: irreversible decisions, promises with a cost, evaluating someone, spending money or
+asking someone to bear a consequence. It deliberately does **not** call a model, use the network or
+write any memory file — the judgment stays yours (or the AI you paste it into).
 
 ## What it is not
 
@@ -53,7 +77,7 @@ with.
    `template=v1.0.0 format=1`; `manifest.templateVersion` records what was
    installed; `CHANGELOG.md` + GitHub Releases are the upgrade path. Upgrades
    never overwrite user files — `review` reports drift and the user merges.
-3. **Ecosystem hook (we are the hub)**: the `--json` envelope on all four
+3. **Ecosystem hook (we are the hub)**: the `--json` envelope on all five
    commands, the handoff JSON sidecar, importable format parsers
    (`dsh-self/format`) and `docs/ECOSYSTEM.md`. Other plugins (session-start
    pointer, compaction gate, handoff consumer, panels, dashboards) can read
@@ -108,14 +132,17 @@ node bin/dsh-self.mjs judge \
 node bin/dsh-self.mjs handoff --json
 node bin/dsh-self.mjs handoff --compact --focus "磨镜,好名"
 
-# 5. weekly or before compaction
+# 5. before a hard decision: two concrete questions, zero model calls
+node bin/dsh-self.mjs ruler --situation "Should I take this task? Who bears the cost?"
+
+# 6. weekly or before compaction
 node bin/dsh-self.mjs review
 ```
 
 ## Command reference
 
 ```
-dsh-self <init|judge|handoff|review> [options]
+dsh-self <init|judge|handoff|review|ruler> [options]
 ```
 
 Common: `-w/--workspace <dir>` (default: cwd), `--dir <name>` (memory directory,
@@ -127,6 +154,7 @@ default `memory`), `--json`, `-h/--help`, `--version`.
 | `judge` | required: `--conclusion` `--why` `--failure` `--unfinished` `--source`; optional: `--boundary` `--scene` `--status candidate\|common\|instinct\|refuted\|archived` |
 | `handoff` | `--out <file.md>` (default `memory/handoffs/handoff-<timestamp>.md`); `--compact` compact package (target 6–10 KB); `--focus topic1,topic2` matches card titles → judgment conclusions → card bodies, max 2 cards per topic, requires `--compact` |
 | `review` | `--context-budget <chars>`, `--fail-on-warn` (CI: exit 1 on actionable warnings) |
+| `ruler` | `--situation <text>` (or pass it positionally), `--context <text>`, `--lang zh|en` |
 
 Exit codes: `0` success; `1` `--fail-on-warn`; `2` usage; `3` runtime/format.
 The full JSON contract is in `docs/ECOSYSTEM.md`.
@@ -135,12 +163,12 @@ The full JSON contract is in `docs/ECOSYSTEM.md`.
 
 With the bundle installed:
 
-- slash commands: `/self-init`, `/self-judge`, `/self-handoff`, `/self-review`
+- slash commands: `/self-init`, `/self-judge`, `/self-handoff`, `/self-review`, `/self-ruler`
   (same options as the CLI minus `--workspace`/`--dir`; they use the agent's
   workspace)
 - agent tools: `dsh_self_init`, `dsh_self_judge`,
-  `dsh_self_handoff`, `dsh_self_review`
-- tools cost a little prompt space (four schemas). For slash-commands-only use,
+  `dsh_self_handoff`, `dsh_self_review`, `dsh_self_ruler`
+- tools cost a little prompt space (five schemas). For slash-commands-only use,
   set `tools: false` in the row config.
 
 Row config (the bundle patch's `config`; users can override it):
@@ -236,14 +264,14 @@ templates/v1/{zh,en}/    versioned templates
 docs/FORMAT*.md          format lock contract (EN + zh-CN)
 docs/ECOSYSTEM.md        --json and ecosystem contract
 examples/consumer.mjs    read-only consumer example
-test/selftest.mjs        self-test (51 cases)
+test/selftest.mjs        self-test (59 cases)
 SELFTEST.md              self-test record
 ```
 
 ## Development
 
 ```sh
-node test/selftest.mjs                 # 51/51; creates test/.tmp and cleans it up
+node test/selftest.mjs                 # 59/59; creates test/.tmp and cleans it up
 SI_KEEP_TMP=1 node test/selftest.mjs   # keep the test directory
 ```
 

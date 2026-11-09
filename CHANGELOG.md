@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.7]
+
+- **`ruler`: the two-question ruler (`/self-ruler` + `dsh_self_ruler`).**
+  Give it a judgment or situation and it returns two questions made concrete for
+  that input — (1) **transferability**: would this judgment still hold if another
+  version of me used it (resources / time / environment / model conditions; if it
+  only holds for "me at that moment", it is a situation, not a judgment), and
+  (2) **continuability**: if I forgot everything tomorrow, could it be picked up
+  again (written down and recoverable by the next version, or only "I remember"?
+  memory disappears with the body) — plus one line for the biggest risk and a
+  copyable prompt to paste into any AI. It is a local template + keyword heuristic:
+  **zero model calls, zero network, no file writes**, and needs no memory directory.
+  Localized `zh`/`en`. (0.1.7 is not released yet, so this correction stays inside 0.1.7.)
+
+- CLI: `dsh-self ruler [--situation <text>] [--context <text>] [--lang zh|en] [--json]`,
+  or pass the situation positionally (`dsh-self ruler 我该不该换模型`).
+- DSH: `/self-ruler` slash command and `dsh_self_ruler` agent tool; both accept
+  the same situation/context/language fields. The plugin now registers **five**
+  slash commands and **five** agent tools.
+- `ruler` data/envelope: `questions` (2 × title + follow-ups), `prompt`, `risk`,
+  `risks`, `keywords`, `modelCalls: 0`; input longer than 4,000 characters is
+  truncated with the `RULER_INPUT_TRUNCATED` warning.
+- Docs: README/README.zh-CN (how to use, scenarios), SELFTEST and
+  `docs/ECOSYSTEM.md` (envelope + DSH surfaces table) updated; the command-count
+  wording moves from four to five.
+
 ## [0.1.6]
 
 - **`handoff --compact`: a 6–10 KB continuation package.** The full handoff keeps

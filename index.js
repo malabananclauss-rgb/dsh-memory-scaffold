@@ -1,8 +1,8 @@
 // Cordis Host plugin for the dsh-self scaffold.
 //
 // Surfaces (both share lib/core.js and lib/plugin.js):
-//   - 4 human slash commands: /self-init /self-judge /self-handoff /self-review
-//   - 4 agent tools:          dsh_self_init / _judge / _handoff / _review
+//   - 5 human slash commands: /self-init /self-judge /self-handoff /self-review /self-ruler
+//   - 5 agent tools:          dsh_self_init / _judge / _handoff / _review / _ruler
 //
 // The tool rows cost a little prompt space; set `tools: false` in the row config
 // if you only want the human commands (the CLI keeps working either way).

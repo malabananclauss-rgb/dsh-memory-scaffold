@@ -135,7 +135,7 @@ async function makeWorkspace(name) {
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
   assert.equal(pkg.name, 'dsh-self');
-  assert.equal(pkg.version, '0.1.6');
+  assert.equal(pkg.version, '0.1.7');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -157,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.6'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.7'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -530,7 +530,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.1.6'));
+  assert.ok(version.stdout.includes('0.1.7'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -767,11 +767,11 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.1.6');
+  assert.equal(pkg.version, '0.1.7');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.6'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.7'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.1.6]'));
+  assert.ok(changelog.includes('[0.1.7]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
@@ -828,20 +828,20 @@ function makeFakeCtx(workspaceDir) {
   return { context, registrations, disposers };
 }
 
-await test('plugin apply registers 4 commands + 4 tools and owns their effects', async () => {
+await test('plugin apply registers 5 commands + 5 tools and owns their effects', async () => {
   const wsPlugin = await makeWorkspace('ws-plugin');
   const { context, registrations, disposers } = makeFakeCtx(wsPlugin);
   apply(context, { memoryDir: 'memory', commands: true, tools: true });
-  assert.equal(registrations.commands.length, 4);
-  assert.equal(registrations.tools.length, 4);
-  assert.equal(disposers.length, 8);
+  assert.equal(registrations.commands.length, 5);
+  assert.equal(registrations.tools.length, 5);
+  assert.equal(disposers.length, 10);
   assert.deepEqual(
     registrations.commands.map((definition) => definition.name).sort(),
-    ['self-handoff', 'self-init', 'self-judge', 'self-review'],
+    ['self-handoff', 'self-init', 'self-judge', 'self-review', 'self-ruler'],
   );
   assert.deepEqual(
     registrations.tools.map((definition) => definition.name).sort(),
-    ['dsh_self_handoff', 'dsh_self_init', 'dsh_self_judge', 'dsh_self_review'],
+    ['dsh_self_handoff', 'dsh_self_init', 'dsh_self_judge', 'dsh_self_review', 'dsh_self_ruler'],
   );
   for (const definition of registrations.commands) {
     assert.equal(typeof definition.description, 'string');
@@ -943,12 +943,12 @@ await test('config can disable one surface and defaults are normalized', async (
   const onlyCommands = makeFakeCtx(wsPlugin);
   apply(onlyCommands.context, { tools: false });
   assert.equal(onlyCommands.registrations.tools.length, 0);
-  assert.equal(onlyCommands.registrations.commands.length, 4);
+  assert.equal(onlyCommands.registrations.commands.length, 5);
 
   const onlyTools = makeFakeCtx(wsPlugin);
   apply(onlyTools.context, { commands: false });
   assert.equal(onlyTools.registrations.commands.length, 0);
-  assert.equal(onlyTools.registrations.tools.length, 4);
+  assert.equal(onlyTools.registrations.tools.length, 5);
 
   const normalized = normalizeConfig({ hotMaxChars: 'not-a-number', contextBudgetChars: 1000, tools: false });
   assert.equal(normalized.hotMaxChars, PLUGIN_DEFAULTS.hotMaxChars);
@@ -1394,6 +1394,135 @@ await test('slash command accepts --compact and --focus', async () => {
   const envelope = JSON.parse(result.text);
   assert.equal(envelope.data.compact, true);
   assert.ok(envelope.data.docBytes <= 10240);
+});
+
+// ---------------------------------------------------------------------------
+// 11. two-question ruler / self-ruler (0.1.7)
+// ---------------------------------------------------------------------------
+
+const wsRuler = await makeWorkspace('ws-ruler');
+
+await test('ruler emits two specific questions, a copyable prompt and a risk', async () => {
+  const env = parseOk(await captureCli([
+    'ruler',
+    '--situation', '我该不该把 dsh-self 的发布交给青决定？以前都是我自己发，大家都这样。',
+    '--context', '本周内要给答复。',
+    '--json',
+  ], { cwd: wsRuler, now: new Date('2026-11-09T08:00:00Z') }), 'ruler');
+  assert.equal(env.command, 'ruler');
+  assert.equal(env.data.lang, 'zh');
+  assert.equal(env.data.modelCalls, 0);
+  assert.equal(env.data.questions.length, 2);
+  assert.match(env.data.questions[0].title, /换一个版本的我来用/);
+  assert.match(env.data.questions[1].title, /全忘|捡回来/);
+  const followups = env.data.questions.flatMap((question) => question.followups);
+  assert.ok(followups.length >= 4);
+  assert.ok(followups.some((line) => line.includes('dsh-self')), 'follow-ups must quote the input');
+  assert.ok(env.data.prompt.includes('我该不该把 dsh-self 的发布交给青决定'));
+  assert.ok(env.data.prompt.includes('本周内要给答复'));
+  assert.ok(env.data.risk.includes('处境'), `unexpected risk: ${env.data.risk}`);
+  assert.ok(env.data.prompt.includes('独特两问'));
+});
+
+await test('ruler accepts a positional situation and rejects empty input', async () => {
+  const positional = parseOk(await captureCli([
+    'ruler', '我该不该换模型？', '--json',
+  ], { cwd: wsRuler }), 'ruler-positional');
+  assert.equal(positional.data.situation, '我该不该换模型？');
+  assert.equal(positional.data.questions.length, 2);
+
+  const empty = await captureCli(['ruler', '--json'], { cwd: wsRuler });
+  assert.equal(empty.code, 2);
+  parseFail(empty, 'USAGE');
+
+  const blank = await captureCli(['ruler', '--situation', '   ', '--json'], { cwd: wsRuler });
+  assert.equal(blank.code, 2);
+  parseFail(blank, 'USAGE');
+});
+
+await test('ruler works without an initialized memory and writes nothing', async () => {
+  const emptyWs = await makeWorkspace('ws-ruler-uninitialized');
+  const env = parseOk(await captureCli([
+    'ruler', '--situation', '要不要接这个任务？', '--json',
+  ], { cwd: emptyWs }), 'ruler-uninitialized');
+  assert.equal(env.data.modelCalls, 0);
+  assert.equal(await exists(path.join(emptyWs, 'memory')), false);
+});
+
+await test('ruler risk heuristic flags memory-only and situation-bound signals', async () => {
+  const memoryOnly = parseOk(await captureCli([
+    'ruler', '--situation', '这条我记得就行，不用写下来。', '--json',
+  ], { cwd: wsRuler }), 'ruler-risk-memory');
+  assert.ok(memoryOnly.data.risk.includes('记忆'), memoryOnly.data.risk);
+
+  const situationBound = parseOk(await captureCli([
+    'ruler', '--situation', '这件事只有现在这个环境适用。', '--json',
+  ], { cwd: wsRuler }), 'ruler-risk-situation');
+  assert.ok(situationBound.data.risk.includes('处境'), situationBound.data.risk);
+});
+
+await test('ruler supports English output', async () => {
+  const env = parseOk(await captureCli([
+    'ruler', '--situation', 'Should I ship dsh-self 0.1.7 now?', '--lang', 'en', '--json',
+  ], { cwd: wsRuler }), 'ruler-en');
+  assert.equal(env.data.lang, 'en');
+  assert.match(env.data.questions[0].title, /another version/i);
+  assert.ok(env.data.prompt.includes('[My situation]'));
+});
+
+await test('ruler truncates an oversized situation with a warning', async () => {
+  const long = '处境'.repeat(2500); // 5000 chars
+  const env = parseOk(await captureCli([
+    'ruler', '--situation', long, '--json',
+  ], { cwd: wsRuler }), 'ruler-long');
+  assert.equal(env.data.situation.length, 4000);
+  assert.ok(env.warnings.some((warning) => warning.code === 'RULER_INPUT_TRUNCATED'));
+});
+
+await test('ruler human output includes the two questions, risk line and copyable prompt', async () => {
+  const run = await captureCli([
+    'ruler', '--situation', '我该不该接这个任务？',
+  ], { cwd: wsRuler });
+  assert.equal(run.code, 0);
+  assert.ok(run.stdout.includes('独特两问'));
+  assert.ok(run.stdout.includes('## 两问（针对这段处境）'));
+  assert.ok(run.stdout.includes('按两问过一遍，最大风险点：'));
+  assert.ok(run.stdout.includes('可直接复制的提示词'));
+  assert.ok(run.stdout.includes('```text'));
+});
+
+await test('agent tool and slash command expose self-ruler', async () => {
+  const definitions = createToolDefinitions({
+    resolveWorkspace: async () => ({ workspaceRoot: wsRuler, memoryDir: 'memory' }),
+    now: () => new Date('2026-11-09T08:10:00Z'),
+  });
+  const rulerTool = definitions.find((definition) => definition.name === 'dsh_self_ruler');
+  assert.ok(rulerTool);
+  assert.deepEqual(rulerTool.parameters.required, ['situation']);
+  assert.equal(rulerTool.parameters.properties.lang.enum.join(','), 'zh,en');
+  const value = await rulerTool.execute(
+    { situation: '要不要把发布交给青？', context: '本周给答复。' },
+    { agent: { id: 'agent-ruler' }, signal: new AbortController().signal },
+  );
+  assert.equal(value.ok, true);
+  assert.equal(value.data.questions.length, 2);
+  assert.equal(value.data.modelCalls, 0);
+
+  const { context, registrations } = makeResolvingCtx(() => undefined);
+  apply(context, { memoryDir: 'memory', commands: true, tools: false });
+  assert.equal(registrations.commands.length, 5);
+  const command = registrations.commands.find((entry) => entry.name === 'self-ruler');
+  assert.ok(command);
+  const result = await command.handler({
+    commandId: 'cmd-ruler',
+    agent: { id: 'agent-ruler-cmd', session: { header: { cwd: wsRuler } } },
+    rawInput: '我该不该换模型？ --json',
+    attachments: [],
+    signal: new AbortController().signal,
+  });
+  assert.equal(result.kind, 'success', result.text);
+  const envelope = JSON.parse(result.text);
+  assert.equal(envelope.data.questions.length, 2);
 });
 
 // ---------------------------------------------------------------------------
