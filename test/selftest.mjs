@@ -135,7 +135,7 @@ async function makeWorkspace(name) {
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
   assert.equal(pkg.name, 'dsh-self');
-  assert.equal(pkg.version, '0.1.4');
+  assert.equal(pkg.version, '0.1.5');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -157,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.4'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.5'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -530,7 +530,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.1.4'));
+  assert.ok(version.stdout.includes('0.1.5'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -767,11 +767,11 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.1.4');
+  assert.equal(pkg.version, '0.1.5');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.4'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.5'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.1.4]'));
+  assert.ok(changelog.includes('[0.1.5]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
@@ -957,6 +957,155 @@ await test('config can disable one surface and defaults are normalized', async (
   assert.equal(normalized.commands, true);
   assert.equal(stripCommandName('/self-judge --conclusion x', 'judge'), '--conclusion x');
   assert.equal(stripCommandName('self-judge --conclusion x', 'judge'), '--conclusion x');
+});
+
+// ---------------------------------------------------------------------------
+// 9. working-directory resolution (0.1.5 regression)
+// ---------------------------------------------------------------------------
+//
+// Mirrors the research experiment (Fish\xue\knowledge\2026-11-09-dsh-拆解.md §2):
+// the plugin must resolve a workspace without ever falling back to the host
+// process cwd, and must classify "directory unavailable" separately from
+// "memory not initialized". The service is deliberately mocked as absent /
+// throwing / late-mounting because the real one needs a full cordis+fs composition.
+
+function makeResolvingCtx(getService) {
+  const registrations = { commands: [], tools: [] };
+  const disposers = [];
+  const context = {
+    get(name) {
+      if (name === 'commands') {
+        return { register: (definition) => { registrations.commands.push(definition); return () => {}; } };
+      }
+      if (name === 'tools') {
+        return { register: (definition) => { registrations.tools.push(definition); return () => {}; } };
+      }
+      if (name === 'workingDirectory') return getService();
+      return undefined;
+    },
+    effect: (fn) => { disposers.push(fn()); return () => {}; },
+  };
+  return { context, registrations, disposers };
+}
+
+function findTool(registrations, name) {
+  const definition = registrations.tools.find((entry) => entry.name === name);
+  assert.ok(definition, `missing tool ${name}`);
+  return definition;
+}
+
+function agentWithHeaderCwd(cwd) {
+  return { id: 'agent-wd-test', session: { header: { cwd } } };
+}
+
+await test('workspace resolution: no service and no candidate → DIRECTORY_UNAVAILABLE, never host cwd', async () => {
+  const { context, registrations } = makeResolvingCtx(() => undefined);
+  apply(context, { memoryDir: 'memory', commands: true, tools: true });
+  // The package itself lives under D:\DSH, which has a memory/ ancestor. A host-cwd
+  // fallback would therefore resolve successfully; a thrown error proves the plugin
+  // never consults process.cwd().
+  const agent = agentWithHeaderCwd(path.join(TMP_ROOT, 'missing-project'));
+  const signal = new AbortController().signal;
+  const tool = findTool(registrations, 'dsh_self_review');
+  await assert.rejects(
+    () => tool.execute({}, { agent, signal }),
+    (error) => {
+      assert.equal(error.code, 'DIRECTORY_UNAVAILABLE');
+      assert.notEqual(error.code, 'NOT_INITIALIZED');
+      assert.match(error.message, /工作目录不可用/);
+      assert.match(error.message, /workingDirectory/);
+      return true;
+    },
+  );
+  const command = registrations.commands.find((entry) => entry.name === 'self-review');
+  const result = await command.handler({
+    commandId: 'cmd-wd', agent, rawInput: '--json', attachments: [], signal,
+  });
+  assert.equal(result.kind, 'error');
+  assert.match(result.text, /DIRECTORY_UNAVAILABLE/);
+});
+
+await test('workspace resolution: absent service falls back to session.header.cwd', async () => {
+  const ws = await makeWorkspace('ws-wd-header');
+  parseOk(await captureCli(['init', '--json'], { cwd: ws }), 'wd-init');
+  const { context, registrations } = makeResolvingCtx(() => undefined);
+  apply(context, { memoryDir: 'memory', commands: false, tools: true });
+  const agent = agentWithHeaderCwd(ws);
+  const value = await findTool(registrations, 'dsh_self_review').execute(
+    {}, { agent, signal: new AbortController().signal },
+  );
+  assert.equal(value.ok, true);
+  assert.equal(value.data.memoryRoot, path.join(ws, 'memory'));
+});
+
+await test('workspace resolution: ensure() throws → falls back to session.header.cwd', async () => {
+  const ws = await makeWorkspace('ws-wd-ensure-throws');
+  parseOk(await captureCli(['init', '--json'], { cwd: ws }), 'wd-init');
+  const service = {
+    ensure: async () => {
+      throw new Error('working-directory: directory does not exist: "D:/gone"');
+    },
+  };
+  const { context, registrations } = makeResolvingCtx(() => service);
+  apply(context, { memoryDir: 'memory', commands: false, tools: true });
+  const agent = agentWithHeaderCwd(ws);
+  const value = await findTool(registrations, 'dsh_self_review').execute(
+    {}, { agent, signal: new AbortController().signal },
+  );
+  assert.equal(value.ok, true);
+  assert.equal(value.data.memoryRoot, path.join(ws, 'memory'));
+});
+
+await test('workspace resolution: service directory wins over a stale header cwd', async () => {
+  const ws = await makeWorkspace('ws-wd-service');
+  parseOk(await captureCli(['init', '--json'], { cwd: ws }), 'wd-init');
+  const service = { ensure: async () => ws };
+  const { context, registrations } = makeResolvingCtx(() => service);
+  apply(context, { memoryDir: 'memory', commands: false, tools: true });
+  const agent = agentWithHeaderCwd(path.join(TMP_ROOT, 'gone-project'));
+  const value = await findTool(registrations, 'dsh_self_review').execute(
+    {}, { agent, signal: new AbortController().signal },
+  );
+  assert.equal(value.ok, true);
+  assert.equal(value.data.memoryRoot, path.join(ws, 'memory'));
+});
+
+await test('workspace resolution: late-mounted service is picked up (no one-shot ctx.get)', async () => {
+  const ws = await makeWorkspace('ws-wd-late');
+  parseOk(await captureCli(['init', '--json'], { cwd: ws }), 'wd-init');
+  let service;
+  const { context, registrations } = makeResolvingCtx(() => service);
+  apply(context, { memoryDir: 'memory', commands: false, tools: true });
+  const agent = agentWithHeaderCwd(path.join(TMP_ROOT, 'no-header-cwd'));
+  const signal = new AbortController().signal;
+  const tool = findTool(registrations, 'dsh_self_review');
+  await assert.rejects(
+    () => tool.execute({}, { agent, signal }),
+    (error) => error.code === 'DIRECTORY_UNAVAILABLE',
+  );
+  // Simulate the service mounting after apply() (host restart / HMR window).
+  service = { ensure: async () => ws };
+  const value = await tool.execute({}, { agent, signal });
+  assert.equal(value.ok, true);
+  assert.equal(value.data.memoryRoot, path.join(ws, 'memory'));
+});
+
+await test('workspace resolution: resolved dir without a scaffold stays NOT_INITIALIZED', async () => {
+  const empty = await makeWorkspace('ws-wd-empty');
+  const service = { ensure: async () => empty };
+  const { context, registrations } = makeResolvingCtx(() => service);
+  apply(context, { memoryDir: 'memory', commands: false, tools: true });
+  const agent = agentWithHeaderCwd(path.join(TMP_ROOT, 'gone-project'));
+  await assert.rejects(
+    () => findTool(registrations, 'dsh_self_review').execute(
+      {}, { agent, signal: new AbortController().signal },
+    ),
+    (error) => {
+      assert.equal(error.code, 'NOT_INITIALIZED');
+      assert.notEqual(error.code, 'DIRECTORY_UNAVAILABLE');
+      return true;
+    },
+  );
 });
 
 // ---------------------------------------------------------------------------

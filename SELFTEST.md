@@ -1,17 +1,18 @@
-# SELFTEST — dsh-self 0.1.2
+# SELFTEST — dsh-self 0.1.5
 
-日期：2026-11-08（初版）／2026-11-09（写操作红线加固）
-包版本：0.1.2 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
+日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析）
+包版本：0.1.5 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
 环境：Windows，DeepSeek Harness 自带 Node **v24.21.0**（`C:\Users\Lenovo\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）
 测试目录：`D:\DSH\products\dsh-self\test\.tmp`（测试结束已清理）
 
-> 结论：**37/37 自动化用例通过**；四个命令 + `--json` 真实进程端到端通过；
+> 结论：**43/43 自动化用例通过**；四个命令 + `--json` 真实进程端到端通过；
 > 在真实手写老库（323 判断 / 12 卡 / 28 索引，**只读**）上验证兼容修复：
 > pending 从 269 条压成 3 组（267 条候选聚合成 1 条），JSON 输出 2972 B，
 > 无 `undefined`/非 lossless 值，失效指针误报 0。
 > 0.1.1 新增：老库 5 列表/中文状态/中文卡字段/多指针 index 兼容；pending 聚合；
 > `LEGACY_FORMAT_READ_ONLY`；lossless JSON 兜底。
 > 0.1.2 加固：写操作红线——文件写入用例只许跑在 test/.tmp，真实记忆目录（D:\DSH、D:\DSH\memory）被 guard 直接拒绝（见 §10）。
+> 0.1.5 修复：workingDirectory 不再一次性 ctx.get、不再回退宿主 process.cwd；回退链 session.header.cwd → 向上找 memory/；DIRECTORY_UNAVAILABLE 与 NOT_INITIALIZED 分离（见 §2 工作目录解析）。
 > 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.1.1/0.1.2 代码。
 
 ---
@@ -35,7 +36,7 @@
 node test/selftest.mjs        # EXIT=0
 ```
 
-结果：`dsh-self selftest: 37/37 passed`，`SELFTEST_EXIT=0`。
+结果：`dsh-self selftest: 43/43 passed`，`SELFTEST_EXIT=0`。
 测试在进程内调用 CLI（DSH 沙箱禁止带管道的子进程 stdio，见 §6），并直接单测
 `lib/format.js`、`lib/core.js`、`lib/json-safe.js`、`lib/plugin.js`、`index.js`。
 
@@ -53,6 +54,7 @@ node test/selftest.mjs        # EXIT=0
 | **版本/文档一致性（0.1.1）** | 1 | package=0.1.1=version.js=CHANGELOG，FORMAT 文档含旧格式说明 |
 | 插件注册层 | 3 | apply 注册 4 命令+4 工具并持有 effect；斜杠命令实跑核心；Agent 工具 execute/render；config 关单侧 |
 | **写操作红线（0.1.2 加固）** | 1 | `captureCli` 对 init/judge/handoff 强制 cwd 在 `test/.tmp`；`D:/DSH`、`D:/DSH/memory`、产品 `memory/` 被 guard 拒绝；只读 review 不受限 |
+| **工作目录解析（0.1.5）** | 6 | 无服务+无候选→DIRECTORY_UNAVAILABLE（断言不回退宿主 cwd）；session.header.cwd 回退；ensure 抛错回退；服务目录优先；延迟挂载服务重试（非一次性 ctx.get）；已解析目录无 scaffold→NOT_INITIALIZED（错误码分离） |
 
 ## 3. 真实老库验证（只读）
 
@@ -176,7 +178,7 @@ node bin/dsh-self.mjs review --workspace D:\DSH --json   # 只读真实库
 
 ## 11. 遗留 / 交给青
 
-1. **重启/重载 Host** 让 0.1.1/0.1.2 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
+1. **重启/重载 Host** 让 0.1.5 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
 2. 重启后在真实 profile 再跑一次 `/self-review` 或 `dsh_self_review`，确认工具层同样不再报
    "not lossless JSON"、pending 输出为聚合后的短 JSON。
 3. 发布：npm/GitHub Release `v0.1.2` 与 CHANGELOG 对齐（市场提交由青决定）。

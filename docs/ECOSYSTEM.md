@@ -33,7 +33,7 @@ Global options: `--workspace <dir>`, `--dir <memory-dir>`, `--json`,
 | `0` | Success (warnings may be present in the envelope). |
 | `1` | `review --fail-on-warn` and at least one actionable warning. |
 | `2` | Usage error (`USAGE`): bad/unknown option, missing required value, invalid enum. |
-| `3` | Runtime/format error: `NOT_INITIALIZED`, `FORMAT_MISMATCH`, `BAD_MANIFEST`, `UNSUPPORTED_FORMAT`, `INTERNAL`. |
+| `3` | Runtime/format error: `NOT_INITIALIZED`, `DIRECTORY_UNAVAILABLE`, `FORMAT_MISMATCH`, `BAD_MANIFEST`, `UNSUPPORTED_FORMAT`, `INTERNAL`. |
 
 Errors still print a JSON envelope on stdout when `--json` is set (nothing is
 thrown to stderr in JSON mode).
@@ -175,8 +175,16 @@ Pending item types: `hot_todo`, `candidate_judgment`, `missing_card`,
 `orphan_card`, `incomplete_card`, `broken_pointer`, `no_handoff`,
 `stale_handoff`.
 
-Error codes: `USAGE`, `NOT_INITIALIZED`, `FORMAT_MISMATCH`,
-`LEGACY_FORMAT_READ_ONLY`, `BAD_MANIFEST`, `UNSUPPORTED_FORMAT`, `INTERNAL`.
+Error codes: `USAGE`, `NOT_INITIALIZED`, `DIRECTORY_UNAVAILABLE`,
+`FORMAT_MISMATCH`, `LEGACY_FORMAT_READ_ONLY`, `BAD_MANIFEST`,
+`UNSUPPORTED_FORMAT`, `INTERNAL`.
+
+`DIRECTORY_UNAVAILABLE` (plugin surfaces only — slash commands / agent tools):
+workspace resolution failed. The `workingDirectory` service was unavailable or
+`ensure()` rejected, and none of the fallback candidates (the Session header cwd,
+the configured workspace, or an ancestor owning `memory/`) resolved. It is
+deliberately distinct from `NOT_INITIALIZED`: the latter means a workspace was
+found but the memory scaffold is absent and should be created with `init`.
 
 Status enum (judgments): `candidate`, `common`, `instinct`, `refuted`,
 `archived`.

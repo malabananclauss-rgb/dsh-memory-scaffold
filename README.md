@@ -235,14 +235,14 @@ templates/v1/{zh,en}/    versioned templates
 docs/FORMAT*.md          format lock contract (EN + zh-CN)
 docs/ECOSYSTEM.md        --json and ecosystem contract
 examples/consumer.mjs    read-only consumer example
-test/selftest.mjs        self-test (37 cases)
+test/selftest.mjs        self-test (43 cases)
 SELFTEST.md              self-test record
 ```
 
 ## Development
 
 ```sh
-node test/selftest.mjs                 # 37/37; creates test/.tmp and cleans it up
+node test/selftest.mjs                 # 43/43; creates test/.tmp and cleans it up
 SI_KEEP_TMP=1 node test/selftest.mjs   # keep the test directory
 ```
 

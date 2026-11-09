@@ -189,14 +189,14 @@ templates/v1/{zh,en}/    版本化模板
 docs/FORMAT*.md          格式锁定契约（中英）
 docs/ECOSYSTEM.md        --json 与生态对接契约
 examples/consumer.mjs    只读消费示例
-test/selftest.mjs        自测（37 项）
+test/selftest.mjs        自测（43 项）
 SELFTEST.md              自测记录
 ```
 
 ## 开发与自测
 
 ```sh
-node test/selftest.mjs        # 37/37；会创建 test/.tmp 并在结束时清理
+node test/selftest.mjs        # 43/43；会创建 test/.tmp 并在结束时清理
 SI_KEEP_TMP=1 node test/selftest.mjs   # 保留测试目录排查
 ```
 

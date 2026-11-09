@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.5]
+
+- **fix(workspace): workingDirectory resolution no longer falls back to the host
+  process cwd.** `index.js` used to read `ctx.get('workingDirectory')` once during
+  `apply()`; when DSH's optional `workingDirectory` service was not yet activated
+  after a host restart/HMR, or `ensure()` threw because the current and original
+  project directories were both gone (`dsh-working-directory` 0.2.2-rc.1
+  `lib/index.js:12-17, 91-107`; README "Missing original project"), the plugin fell
+  back to `process.cwd()` — the host directory — and reported `NOT_INITIALIZED`.
+  New chain: `workingDirectory.ensure()` (re-resolved on every call) →
+  `agent.session.header.cwd` → configured workspace → first ancestor owning the
+  memory directory → otherwise a distinct `DIRECTORY_UNAVAILABLE` error. A resolved
+  directory without a memory scaffold still reports `NOT_INITIALIZED`, so the two
+  failure classes stay distinguishable.
+- Regression tests (+6, selftest 43/43): absent service with a header cwd,
+  `ensure()` throwing, service-directory precedence, late-mounted service retry,
+  `DIRECTORY_UNAVAILABLE` classification, and resolved-but-uninitialized
+  classification. The "no candidate" case asserts the plugin never consults the
+  host process cwd (the package lives under `D:\DSH`, which owns `memory/`).
+
 ## [0.1.4]
 
 - **decisions.md: session decisions in the handoff.** New fifth file `memory/decisions.md`
