@@ -24,7 +24,7 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 | --- | --- |
 | `init` | 在工作区建四层结构：`hot/state.md`（状态）、`index.md`（索引）、`judgments.md`（判断库）、`judgments-cards.md`（判断卡），外加 `decisions.md`（本次会话决策）＋模板＋`QUICKSTART.md`。幂等：只补缺失文件，**从不覆盖已写内容**。 |
 | `judge` | 新增一条判断卡：结论／为什么／失败反例／未完成／来源；自动编号（J001…），同时写入 judgments 与 cards 两张表。 |
-| `handoff` | 读你的记忆，生成「接续包」文档＋ **8 个验证问题**，并写一份同名 `.json` 侧车文件给其他插件读。换模型／换会话前跑。 |
+| `handoff` | 读你的记忆，生成「接续包」文档＋ **8 个验证问题**，并写一份同名 `.json` 侧车文件给其他插件读。换模型／换会话前跑。`--compact` 出 6–10 KB 紧凑版（方向+hot+活判断精简+按 `--focus` 选卡+未完成+验证问题）；`--focus` 按主题挑判断卡。 |
 | `review` | 压缩审查：hot 大小（>800 字 / 2KB 告警）、上下文占比提示、待落盘项清单、判断库/卡一致性、失效索引指针、模板版本漂移。 |
 
 ## 它不是什么（诚实边界）
@@ -84,6 +84,7 @@ node bin/dsh-self.mjs judge \
 
 # 4. 换模型 / 换会话前
 node bin/dsh-self.mjs handoff --json
+node bin/dsh-self.mjs handoff --compact --focus "磨镜,好名"
 
 # 5. 每周或压缩前
 node bin/dsh-self.mjs review
@@ -102,7 +103,7 @@ dsh-self <init|judge|handoff|review> [options]
 | --- | --- |
 | `init` | `--lang zh\|en` |
 | `judge` | `--conclusion` `--why` `--failure` `--unfinished` `--source`（必填）；`--boundary` `--scene` `--status candidate\|common\|instinct\|refuted\|archived`（可选） |
-| `handoff` | `--out <file.md>`（可选；默认 `memory/handoffs/handoff-<时间戳>.md`） |
+| `handoff` | `--out <file.md>`（可选；默认 `memory/handoffs/handoff-<时间戳>.md`）；`--compact` 紧凑版（目标 6–10 KB）；`--focus 主题1,主题2` 按卡标题→结论→正文匹配，每主题最多 2 张卡，只能配 `--compact` |
 | `review` | `--context-budget <字符数>`、`--fail-on-warn`（CI 用，有可操作告警时退出码 1） |
 
 退出码：`0` 成功；`1` `--fail-on-warn`；`2` 用法错误；`3` 运行/格式错误。
@@ -189,14 +190,14 @@ templates/v1/{zh,en}/    版本化模板
 docs/FORMAT*.md          格式锁定契约（中英）
 docs/ECOSYSTEM.md        --json 与生态对接契约
 examples/consumer.mjs    只读消费示例
-test/selftest.mjs        自测（43 项）
+test/selftest.mjs        自测（51 项）
 SELFTEST.md              自测记录
 ```
 
 ## 开发与自测
 
 ```sh
-node test/selftest.mjs        # 43/43；会创建 test/.tmp 并在结束时清理
+node test/selftest.mjs        # 51/51；会创建 test/.tmp 并在结束时清理
 SI_KEEP_TMP=1 node test/selftest.mjs   # 保留测试目录排查
 ```
 

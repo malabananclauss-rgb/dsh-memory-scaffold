@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.6]
+
+- **`handoff --compact`: a 6–10 KB continuation package.** The full handoff keeps
+  growing with the judgment library (≈38 KB on the live library); compact mode
+  renders only what a successor needs to continue the *direction*: the key
+  sections of `memory/my-direction.md` (what I want to become / do / refuse,
+  接续者怎么用), the `hot/state.md` snapshot, common/instinct judgments condensed
+  to `id · conclusion · boundary`, focus-selected judgment cards, unfinished
+  items, and the 8 verification questions. It is capped at 10 KB (target start
+  6 KB); when the budget is tight it drops judgment rows/cards and says so in
+  the document. Full mode is unchanged.
+- **`--focus <主题1,主题2>`: topic-selected judgment cards.** Comma-separated
+  topics; for each topic, the first matches by card title, then judgment
+  conclusion, then any card body field are selected; at most 2 cards per topic,
+  de-duplicated across topics, with unmatched topics reported. Only valid with
+  `--compact` (full mode already contains every card). This replaces the need to
+  hand-map topics to card ids (the `bench_material.py` TOPIC_CARDS map was the
+  experiment record; the plugin now matches by keywords generically).
+- The compact package and its JSON sidecar record `docBytes`, `compact.focus`
+  (topics / selected card ids / unmatched), size caps and omission counts;
+  `handoff` data now always carries `docBytes`.
+- Commands/tools: `handoff` accepts `--compact` / `--focus`; the CLI human
+  output shows the compact size and selected cards; `dsh_self_handoff` gained
+  `compact` and `focus` parameters.
+- Docs: README/README.zh-CN, SELFTEST and `docs/ECOSYSTEM.md` describe compact
+  mode, the focus matcher and the new JSON fields.
+
 ## [0.1.5]
 
 - **fix(workspace): workingDirectory resolution no longer falls back to the host

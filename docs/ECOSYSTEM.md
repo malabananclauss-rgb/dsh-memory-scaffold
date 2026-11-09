@@ -24,7 +24,9 @@ dsh-self <init|judge|handoff|review> [options] --json
 ```
 
 Global options: `--workspace <dir>`, `--dir <memory-dir>`, `--json`,
-`--help`/`--version`. Command-specific options are listed in `README.md`.
+`--help`/`--version`. Command-specific options are listed in `README.md`;
+for `handoff` they are `--out <file.md>`, `--compact`, and `--focus <topic1,topic2>`
+(`--focus` requires `--compact`; using it alone is a `USAGE` error).
 
 ### Exit codes
 
@@ -114,7 +116,7 @@ thrown to stderr in JSON mode).
   "lang": "zh",
   "stats": {
     "hotChars": 280, "hotBytes": 744, "judgments": 3, "cards": 3,
-    "indexEntries": 1, "pending": 4
+    "indexEntries": 1, "pending": 4, "docBytes": 37051
   },
   "verificationQuestions": ["… (exactly 8) …"],
   "replayQuestions": ["…"],
@@ -124,9 +126,21 @@ thrown to stderr in JSON mode).
   "formatVersion": 1,
   "templateVersion": "1.0.0",
   "memoryRoot": "D:\\work\\memory",
-  "generatedAt": "2026-11-08T13:00:00.000Z"
+  "generatedAt": "2026-11-08T13:00:00.000Z",
+  "docBytes": 37051,
+  "compact": false
 }
 ```
+
+`handoff --compact` keeps the same envelope shape and adds `docBytes`,
+`compact: true`, `focus` (`topics` / `cards` as `{topic, id}` / `unmatched` /
+`maxPerTopic`), `compactLimits` (`{min, max}` bytes) and, in the sidecar, a
+`compact` object with the rendered counts (`directionSections`,
+`judgmentRowsOmitted`, `focusCards`, `pendingItems`, size caps). The compact
+Markdown itself is capped at 10 KB and names any rows/cards omitted for size.
+`--focus` without `--compact` fails with `USAGE`. Missing
+`memory/my-direction.md` adds the `DIRECTION_MISSING` warning but still writes
+the package with an empty direction section.
 
 The `.json` sidecar at `jsonPath` is the preferred machine-readable handoff
 (written by the same command, schema `dsh-self/handoff`, documented in
@@ -169,7 +183,8 @@ The `.json` sidecar at `jsonPath` is the preferred machine-readable handoff
 Warning codes: `HOT_OVERSIZE`, `HOT_BYTES_OVERSIZE`, `HOT_MISSING`,
 `JUDGMENTS_MISSING`, `CARDS_MISSING`, `MANIFEST_MISSING`,
 `TEMPLATE_UPGRADE_AVAILABLE`, `CARD_COUNT_MISMATCH`, `JUDGMENTS_FORMAT_ISSUE`,
-`JUDGMENTS_FORMAT_ISSUES`, `INDEX_FORMAT_ISSUE`, `CONTEXT_SHARE_HIGH`.
+`JUDGMENTS_FORMAT_ISSUES`, `INDEX_FORMAT_ISSUE`, `CONTEXT_SHARE_HIGH`,
+`DIRECTION_MISSING`.
 
 Pending item types: `hot_todo`, `candidate_judgment`, `missing_card`,
 `orphan_card`, `incomplete_card`, `broken_pointer`, `no_handoff`,

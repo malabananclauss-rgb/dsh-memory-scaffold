@@ -30,7 +30,7 @@ with.
 | --- | --- |
 | `init` | Creates the four-layer structure — `hot/state.md`, `index.md`, `judgments.md`, `judgments-cards.md`, `decisions.md` — plus templates and a `QUICKSTART.md`. Idempotent: adds missing files, **never overwrites** what you wrote. |
 | `judge` | Adds one judgment card: conclusion / why / failure-counterexample / unfinished / source. Auto-numbered (J001…), written to both the index table and the card file. |
-| `handoff` | Reads your memory, writes a continuation package plus **8 verification questions**, and a machine-readable `.json` sidecar for other plugins. Run it before switching model or session. |
+| `handoff` | Reads your memory, writes a continuation package plus **8 verification questions**, and a machine-readable `.json` sidecar for other plugins. Run it before switching model or session. `--compact` emits a 6–10 KB package (direction + hot + condensed live judgments + `--focus` cards + pending + questions); `--focus` selects judgment cards by topic. |
 | `review` | Compression review: hot size (>800 chars / >2 KB warning), context-share estimate, not-yet-persisted items, judgments/cards consistency, broken index pointers, template drift. |
 
 ## What it is not
@@ -106,6 +106,7 @@ node bin/dsh-self.mjs judge \
 
 # 4. before switching model/session
 node bin/dsh-self.mjs handoff --json
+node bin/dsh-self.mjs handoff --compact --focus "磨镜,好名"
 
 # 5. weekly or before compaction
 node bin/dsh-self.mjs review
@@ -124,7 +125,7 @@ default `memory`), `--json`, `-h/--help`, `--version`.
 | --- | --- |
 | `init` | `--lang zh\|en` |
 | `judge` | required: `--conclusion` `--why` `--failure` `--unfinished` `--source`; optional: `--boundary` `--scene` `--status candidate\|common\|instinct\|refuted\|archived` |
-| `handoff` | `--out <file.md>` (default `memory/handoffs/handoff-<timestamp>.md`) |
+| `handoff` | `--out <file.md>` (default `memory/handoffs/handoff-<timestamp>.md`); `--compact` compact package (target 6–10 KB); `--focus topic1,topic2` matches card titles → judgment conclusions → card bodies, max 2 cards per topic, requires `--compact` |
 | `review` | `--context-budget <chars>`, `--fail-on-warn` (CI: exit 1 on actionable warnings) |
 
 Exit codes: `0` success; `1` `--fail-on-warn`; `2` usage; `3` runtime/format.
@@ -235,14 +236,14 @@ templates/v1/{zh,en}/    versioned templates
 docs/FORMAT*.md          format lock contract (EN + zh-CN)
 docs/ECOSYSTEM.md        --json and ecosystem contract
 examples/consumer.mjs    read-only consumer example
-test/selftest.mjs        self-test (43 cases)
+test/selftest.mjs        self-test (51 cases)
 SELFTEST.md              self-test record
 ```
 
 ## Development
 
 ```sh
-node test/selftest.mjs                 # 43/43; creates test/.tmp and cleans it up
+node test/selftest.mjs                 # 51/51; creates test/.tmp and cleans it up
 SI_KEEP_TMP=1 node test/selftest.mjs   # keep the test directory
 ```
 
