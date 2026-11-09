@@ -1,8 +1,17 @@
 {
   "name": "dsh-self",
   "version": "0.1.7",
-  "description": "Scaffold for layered agent memory: four-layer memory files, judgment cards, a model-handoff package and compression review. Format-locked, zero-dependency, JSON-first.",
+  "description": "Scaffold for layered agent memory: memory files, judgment cards, full/compact model handoff, two-question ruler and compression review. Format-locked, zero-dependency, JSON-first.",
   "license": "MIT",
+  "author": "malabananclauss-rgb",
+  "homepage": "https://github.com/malabananclauss-rgb/dsh-self#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malabananclauss-rgb/dsh-self.git"
+  },
+  "bugs": {
+    "url": "https://github.com/malabananclauss-rgb/dsh-self/issues"
+  },
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -22,6 +31,8 @@
     "bin",
     "templates",
     "locale",
+    "assets",
+    "screenshots.json",
     "icon.svg",
     "docs",
     "examples",

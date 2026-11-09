@@ -1,4 +1,4 @@
-﻿# dsh-self
+# dsh-self
 
 > A scaffold that gives a DSH agent or role **layered memory + judgment cards +
 > model handoff + compression review** in one command — structure only, no content.
@@ -10,6 +10,18 @@
   so other plugins can read it and build on it
 - Versioned templates (`template=v1.0.0` + CHANGELOG); upgrades never overwrite
   user files
+
+## Install in 30 seconds
+
+```sh
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
+```
+
+Restart DSH when prompted, then run `/self-init` in a workspace.
+
+**What it does:** gives a DSH agent a structure that survives model/session swaps — layered memory files, judgment cards, a full handoff package with 8 verification questions and a 6–10 KB compact mode, and a two-question ruler for transferability and recoverability. **Structure only, not a memory engine:** it does not capture chats, embed, retrieve or call a model.
+
+![dsh-self overview](assets/screenshots/01-overview.png)
 
 ---
 
@@ -91,7 +103,9 @@ write any memory file — the judgment stays yours (or the AI you paste it into)
 **A — install from the repository (recommended; slash commands + agent tools)**
 
 ```sh
-dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
+# or the prebuilt tarball from the v0.1.7 release:
+dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-self/releases/download/v0.1.7/dsh-self-0.1.7.tar.gz
 # or clone and point at the directory:
 #   git clone https://github.com/malabananclauss-rgb/dsh-self
 #   dsh plugin --profile <your profile> add ./dsh-self
@@ -107,7 +121,8 @@ an installable bundle and never edits your profile.
 node bin/dsh-self.mjs init
 ```
 
-**C — once published to npm**: `npx dsh-self init`.
+**C — npm**: not published yet (the unscoped `dsh-self` name is occupied by another
+project); use the GitHub install above.
 
 ## Quick start
 

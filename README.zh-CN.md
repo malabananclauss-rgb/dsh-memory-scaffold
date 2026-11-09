@@ -8,6 +8,18 @@
 - 5 个命令全部支持 `--json`，文件格式公开锁定 —— 其他插件可以直接读、可以直接接
 - 模板版本化（`template=v1.0.0`＋CHANGELOG），升级不覆盖用户文件
 
+## 30 秒装好
+
+```sh
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
+```
+
+看到重启提示就重启，然后在工作区跑 `/self-init`。
+
+**它是什么：** 给 DSH agent 一套跨模型/跨会话续命的结构——分层记忆文件、判断卡、完整接续包（8 个验证问题）＋6–10 KB 紧凑版、以及判断“可迁移/可接续”的两问尺子。**只是结构脚手架，不是记忆引擎**：不自动捕获对话、不做嵌入/召回、不调用模型。
+
+![dsh-self 概览](assets/screenshots/01-overview.png)
+
 ---
 
 ## 为什么需要它
@@ -68,7 +80,9 @@ DSH 里用 `/self-ruler` 或 `dsh_self_ruler` 工具，用法相同。**不调�
 **方式 A — 从仓库安装（推荐，含斜杠命令＋Agent 工具）**
 
 ```sh
-dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-self#v0.1.7
+# 或用 v0.1.7 Release 里的预构建 tarball：
+dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-self/releases/download/v0.1.7/dsh-self-0.1.7.tar.gz
 # 或先 clone 再指向目录：
 #   git clone https://github.com/malabananclauss-rgb/dsh-self
 #   dsh plugin --profile <你的 profile> add ./dsh-self
@@ -83,7 +97,7 @@ dsh plugin add git+https://github.com/malabananclauss-rgb/dsh-self
 node bin/dsh-self.mjs init
 ```
 
-**方式 C — 发布到 npm 后**：`npx dsh-self init`。
+**方式 C — npm**：还没发布（`dsh-self` 这个无 scope 名字已被另一个项目占用）；请用上面的 GitHub 安装。
 
 ## 快速开始
 
