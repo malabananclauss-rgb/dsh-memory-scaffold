@@ -134,8 +134,8 @@ async function makeWorkspace(name) {
 
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.name, 'dsh-memory-scaffold');
-  assert.equal(pkg.version, '0.2.0');
+  assert.equal(pkg.name, 'qing-self');
+  assert.equal(pkg.version, '0.3.0');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -145,7 +145,7 @@ await test('package.json declares an installable DSH bundle', async () => {
   assert.ok(pkg.exports['./format']);
   const patch = await readFile(path.join(PACKAGE_ROOT, 'cordis.patch.yml'), 'utf8');
   assert.match(patch, /id: dsh-self/);
-  assert.match(patch, /name: 'dsh-memory-scaffold'/);
+  assert.match(patch, /name: 'qing-self'/);
   assert.match(patch, /memoryDir: memory/);
 });
 
@@ -157,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.2.0'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.3.0'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -530,7 +530,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.2.0'));
+  assert.ok(version.stdout.includes('0.3.0'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -767,11 +767,11 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.2.0');
+  assert.equal(pkg.version, '0.3.0');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.2.0'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.3.0'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.2.0]'));
+  assert.ok(changelog.includes('[0.3.0]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
@@ -1397,7 +1397,7 @@ await test('slash command accepts --compact and --focus', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 11. two-question ruler / self-ruler (0.2.0)
+// 11. two-question ruler / self-ruler (0.3.0)
 // ---------------------------------------------------------------------------
 
 const wsRuler = await makeWorkspace('ws-ruler');
@@ -1463,7 +1463,7 @@ await test('ruler risk heuristic flags memory-only and situation-bound signals',
 
 await test('ruler supports English output', async () => {
   const env = parseOk(await captureCli([
-    'ruler', '--situation', 'Should I ship dsh-self 0.2.0 now?', '--lang', 'en', '--json',
+    'ruler', '--situation', 'Should I ship dsh-self 0.3.0 now?', '--lang', 'en', '--json',
   ], { cwd: wsRuler }), 'ruler-en');
   assert.equal(env.data.lang, 'en');
   assert.match(env.data.questions[0].title, /another version/i);

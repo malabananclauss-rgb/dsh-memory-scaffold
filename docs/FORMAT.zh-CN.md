@@ -1,6 +1,6 @@
-# dsh-memory-scaffold 格式 v1（已锁定；原 dsh-self）
+# qing-self 格式 v1（已锁定；原 dsh-self / dsh-memory-scaffold）
 
-状态：**format v1 锁定**。本文件是人读契约，`lib/format.js` 是唯一实现源。第三方插件想兼容 dsh-memory-scaffold 记忆目录，必须按本文件来。
+状态：**format v1 锁定**。本文件是人读契约，`lib/format.js` 是唯一实现源。第三方插件想兼容 qing-self 记忆目录，必须按本文件来。
 
 锁定的目的是兼容，不是控制：目录、字段名、枚举值写死，独立工具才能不经协商读写同一份记忆。**不加密、不设暗桩、不写排他逻辑**——全部是纯 markdown/JSON，任何编辑器都能读、diff、改、迁移。
 

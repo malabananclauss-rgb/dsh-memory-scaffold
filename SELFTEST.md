@@ -1,7 +1,7 @@
-﻿# SELFTEST — dsh-memory-scaffold 0.2.0
+﻿# SELFTEST — qing-self 0.3.0
 
-日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问；0.2.0 改名 dsh-memory-scaffold）
-包版本：0.2.0 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
+日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问；0.2.0 改名 dsh-memory-scaffold；0.3.0 改名 qing-self）
+包版本：0.3.0 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
 环境：Windows，DeepSeek Harness 自带 Node **v24.21.0**（`C:\Users\Lenovo\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）
 测试目录：`D:\DSH\products\dsh-self\test\.tmp`（测试结束已清理）
 
@@ -16,7 +16,8 @@
 > 0.1.6 新增：`handoff --compact`（方向+hot+活判断精简+聚焦卡+未完成+验证问题，6–10 KB）与 `--focus 主题`（按卡标题/结论/正文匹配，每主题最多 2 张卡，去重，只配 --compact）。
 > 0.1.7 新增：`ruler` / `/self-ruler` / `dsh_self_ruler`——独特两问（可迁移性/可接续性），本地模板＋关键词启发式，零模型调用、不写文件；输出两条具体追问＋可复制提示词＋最大风险点。
 > 0.2.0 改名：package/仓库名 `dsh-self` → `dsh-memory-scaffold`（npm `dsh-self` 被占）；CLI 二进制、斜杠命令、工具名、`.dsh-self/` 目录与 format schema 保持不变。
-> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.2.0 代码。
+> 0.3.0 改名：`dsh-memory-scaffold` → `qing-self`；CLI/format 继续不变。
+> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.3.0 代码。
 
 ---
 

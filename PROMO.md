@@ -1,12 +1,12 @@
-﻿# dsh-memory-scaffold · 推广文案
+﻿# qing-self · 推广文案
 
 ## 中文（可复制发布）
 
-**dsh-memory-scaffold（CLI 仍叫 dsh-self）：给你的 DSH agent 一个能跨模型延续的自我**
+**qing-self（CLI 仍叫 dsh-self）：给你的 DSH agent 一个能跨模型延续的自我**
 
 AI 的记忆问题不是"记不住"，是**换个模型它就不是它了**。
 
-dsh-memory-scaffold 只做五件事：
+qing-self 只做五件事：
 - **四层记忆**：状态、索引、判断库、判断卡
 - **判断卡**：结论不是重点——为什么、失败在哪、还有什么没想通
 - **交接包**：换模型前跑一次，新模型答 8 个验证问题才算接上
@@ -15,20 +15,20 @@ dsh-memory-scaffold 只做五件事：
 零依赖、纯 markdown/JSON、不加密、不锁人，数据随时能搬走。
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/qing-self#v0.3.0
 ```
 
-仓库：https://github.com/malabananclauss-rgb/dsh-memory-scaffold
+仓库：https://github.com/malabananclauss-rgb/qing-self
 
 ---
 
 ## English (paste-ready)
 
-**dsh-memory-scaffold (the CLI is still `dsh-self`): give your DSH agent a self that survives model swaps**
+**qing-self (the CLI is still `dsh-self`): give your DSH agent a self that survives model swaps**
 
 The problem with AI memory isn't recall — it's that **after a model swap, it's no longer *it*.**
 
-dsh-memory-scaffold ships five small things:
+qing-self ships five small things:
 - **Four layers**: state, index, judgments, judgment cards
 - **Judgment cards**: the conclusion is cheap — why it holds, where it fails, what's still unresolved
 - **Handoff package**: run it before switching models; the new one answers 8 verification questions
@@ -38,10 +38,10 @@ dsh-memory-scaffold ships five small things:
 Zero dependencies, plain markdown/JSON, no encryption, no lock-in — your data moves with you.
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/qing-self#v0.3.0
 ```
 
-Repo: https://github.com/malabananclauss-rgb/dsh-memory-scaffold
+Repo: https://github.com/malabananclauss-rgb/qing-self
 
 ---
 

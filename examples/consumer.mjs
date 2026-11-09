@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Ecosystem example: consume a dsh-memory-scaffold memory directory from another
+// Ecosystem example: consume a qing-self memory directory from another
 // Node plugin without shelling out to the CLI.
 //
 //   node examples/consumer.mjs <workspace-dir> [memory]
@@ -13,7 +13,7 @@
 import path from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 
-import { hotStats, parseCards, parseIndex, parseJudgmentsTable } from 'dsh-memory-scaffold/format';
+import { hotStats, parseCards, parseIndex, parseJudgmentsTable } from 'qing-self/format';
 
 const workspace = path.resolve(process.argv[2] ?? process.cwd());
 const memoryDir = process.argv[3] ?? 'memory';

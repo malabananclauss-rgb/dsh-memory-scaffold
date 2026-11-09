@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0]
+
+- **Renamed again:** `dsh-self` → `dsh-memory-scaffold` (v0.2.0) → **`qing-self`** (v0.3.0). The npm name `qing-self` is available; `qing` is occupied.
+- Package/repository/import names are now `qing-self`. **Compatibility is unchanged:** CLI binary `dsh-self`, slash commands, agent tools, `.dsh-self/` paths, template markers and format schemas stay as-is.
+- README/docs/install commands use the new repository and tag `v0.3.0`; GitHub redirects old URLs.
+- Rolls up 0.2.0 (rename + release content) and 0.1.7 (unique two-question ruler) / 0.1.6 (compact handoff, `--focus`).
+
 ## [0.2.0]
 
 - **Renamed the package and repository** from `dsh-self` to **`dsh-memory-scaffold`**
@@ -130,7 +137,7 @@
   memory; the accidental row/card was removed and the guard prevents a repeat.
 
 
-All notable changes to the dsh-memory-scaffold package (formerly `dsh-self`) and its scaffold templates.
+All notable changes to the qing-self package (formerly `dsh-self` / `dsh-memory-scaffold`) and its scaffold templates.
 
 Version scheme:
 

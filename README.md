@@ -1,10 +1,10 @@
-﻿# dsh-memory-scaffold
+﻿# qing-self
 
 > A scaffold that gives a DSH agent or role **layered memory + judgment cards +
 > model handoff + compression review** in one command — structure only, no content.
 > No third-party judgments, no private memories, no hidden behavior.
 
-> **Renamed:** this package was `dsh-self`; from v0.2.0 the package/repository name is **`dsh-memory-scaffold`**. The CLI binary is still `dsh-self`; slash commands, agent tools, `.dsh-self/` paths and format schemas are unchanged.
+> **Renamed:** `dsh-self` → `dsh-memory-scaffold` (v0.2.0) → **`qing-self`** (v0.3.0). The CLI binary is still `dsh-self`; slash commands, agent tools, `.dsh-self/` paths and format schemas are unchanged.
 
 - Zero dependencies, no network, no LLM calls, no embeddings
 - Plain markdown + JSON that any editor can read, diff and migrate
@@ -16,14 +16,14 @@
 ## Install in 30 seconds
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/qing-self#v0.3.0
 ```
 
 Restart DSH when prompted, then run `/self-init` in a workspace.
 
 **What it does:** gives a DSH agent a structure that survives model/session swaps — layered memory files, judgment cards, a full handoff package with 8 verification questions and a 6–10 KB compact mode, and a two-question ruler for transferability and recoverability. **Structure only, not a memory engine:** it does not capture chats, embed, retrieve or call a model.
 
-![dsh-memory-scaffold overview](assets/screenshots/01-overview.png)
+![qing-self overview](assets/screenshots/01-overview.png)
 
 ---
 
@@ -93,7 +93,7 @@ write any memory file — the judgment stays yours (or the AI you paste it into)
    never overwrite user files — `review` reports drift and the user merges.
 3. **Ecosystem hook (we are the hub)**: the `--json` envelope on all five
    commands, the handoff JSON sidecar, importable format parsers
-   (`dsh-memory-scaffold/format`) and `docs/ECOSYSTEM.md`. Other plugins (session-start
+   (`qing-self/format`) and `docs/ECOSYSTEM.md`. Other plugins (session-start
    pointer, compaction gate, handoff consumer, panels, dashboards) can read
    without copying the implementation.
 4. **Content-free**: structure and process templates only. That keeps it honest
@@ -105,11 +105,11 @@ write any memory file — the judgment stays yours (or the AI you paste it into)
 **A — install from the repository (recommended; slash commands + agent tools)**
 
 ```sh
-dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold#v0.2.0
-# or the prebuilt tarball from the v0.2.0 release:
-dsh plugin --profile web add https://github.com/malabananclauss-rgb/dsh-memory-scaffold/releases/download/v0.2.0/dsh-memory-scaffold-0.2.0.tgz
+dsh plugin --profile web add git+https://github.com/malabananclauss-rgb/qing-self#v0.3.0
+# or the prebuilt tarball from the v0.3.0 release:
+dsh plugin --profile web add https://github.com/malabananclauss-rgb/qing-self/releases/download/v0.3.0/qing-self-0.3.0.tgz
 # or clone and point at the directory:
-#   git clone https://github.com/malabananclauss-rgb/dsh-memory-scaffold
+#   git clone https://github.com/malabananclauss-rgb/qing-self
 #   dsh plugin --profile <your profile> add ./dsh-self
 # or install the local directory from the Web Plugins page / plugin_manager install_bundle
 ```
@@ -206,7 +206,7 @@ Row config (the bundle patch's `config`; users can override it):
 - `handoff` writes a `.md` package plus a `.json` sidecar
   (`schema: "dsh-self/handoff"`)
 - Node consumers can
-  `import { parseJudgmentsTable, parseCards, hotStats } from 'dsh-memory-scaffold/format'`
+  `import { parseJudgmentsTable, parseCards, hotStats } from 'qing-self/format'`
 - File-only consumers follow the locked markdown format in `docs/FORMAT.md`
 - Integration recipes (session-start pointer, compaction gate, handoff consumer,
   dashboards) are in `docs/ECOSYSTEM.md` §6

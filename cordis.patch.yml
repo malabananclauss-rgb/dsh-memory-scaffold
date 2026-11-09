@@ -1,8 +1,8 @@
-# dsh-memory-scaffold — installable DSH bundle patch (row id kept as dsh-self for stable overrides).
+# qing-self — installable DSH bundle patch (row id kept as dsh-self for stable overrides).
 # The row id is stable; user overrides should target it by id.
 - insert:
     - id: dsh-self
-      name: 'dsh-memory-scaffold'
+      name: 'qing-self'
       config:
         memoryDir: memory
         hotMaxChars: 800

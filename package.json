@@ -1,16 +1,16 @@
 {
-  "name": "dsh-memory-scaffold",
-  "version": "0.2.0",
+  "name": "qing-self",
+  "version": "0.3.0",
   "description": "Scaffold for layered agent memory: memory files, judgment cards, full/compact model handoff, two-question ruler and compression review. Format-locked, zero-dependency, JSON-first.",
   "license": "MIT",
   "author": "malabananclauss-rgb",
-  "homepage": "https://github.com/malabananclauss-rgb/dsh-memory-scaffold#readme",
+  "homepage": "https://github.com/malabananclauss-rgb/qing-self#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/malabananclauss-rgb/dsh-memory-scaffold.git"
+    "url": "git+https://github.com/malabananclauss-rgb/qing-self.git"
   },
   "bugs": {
-    "url": "https://github.com/malabananclauss-rgb/dsh-memory-scaffold/issues"
+    "url": "https://github.com/malabananclauss-rgb/qing-self/issues"
   },
   "type": "module",
   "main": "./index.js",
