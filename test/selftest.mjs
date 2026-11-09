@@ -135,7 +135,7 @@ async function makeWorkspace(name) {
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
   assert.equal(pkg.name, 'qing-self');
-  assert.equal(pkg.version, '0.3.0');
+  assert.equal(pkg.version, '0.4.0');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -157,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.3.0'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.4.0'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -530,7 +530,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.3.0'));
+  assert.ok(version.stdout.includes('0.4.0'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -557,6 +557,164 @@ await test('every --json envelope has the documented shape', async () => {
     assert.ok(Array.isArray(env.errors));
     assert.equal(typeof env.workspace, 'string');
   }
+});
+
+// ---------------------------------------------------------------------------
+// 6b. portability commands: diff / recall / check (0.4.0)
+// ---------------------------------------------------------------------------
+
+await test('diff compares two score files A→B and reports focused loss', async () => {
+  const wsDiff = await makeWorkspace('ws-diff');
+  await writeFixture(wsDiff, 'a.json', JSON.stringify({
+    total: 82.5,
+    items: [
+      { name: '接续保真', score: 20, weight: 25 },
+      { name: '判断一致', score: 18, weight: 25 },
+      { name: '工具使用', score: 15, weight: 20 },
+    ],
+  }));
+  await writeFixture(wsDiff, 'b.json', JSON.stringify({
+    total: 74.0,
+    items: [
+      { name: '接续保真', score: 15, weight: 25 },
+      { name: '判断一致', score: 16, weight: 25 },
+      { name: '工具使用', score: 15, weight: 20 },
+    ],
+  }));
+  const env = parseOk(await captureCli(['diff', '--a', 'a.json', '--b', 'b.json', '--json'], { cwd: wsDiff }), 'diff');
+  assert.equal(env.command, 'diff');
+  assert.equal(env.data.direction, 'A→B');
+  assert.equal(env.data.total.a, 82.5);
+  assert.equal(env.data.total.b, 74);
+  assert.equal(env.data.total.delta, -8.5);
+  assert.equal(env.data.total_diff_rate_pct, 8.5);
+  assert.equal(env.data.items[0].diff_rate_pct, 20);
+  assert.equal(env.data.items[1].diff_rate_pct, 8);
+  assert.equal(env.data.focused_loss, '接续保真');
+  const human = await captureCli(['diff', '--a', 'a.json', '--b', 'b.json'], { cwd: wsDiff });
+  assert.equal(human.code, 0);
+  assert.ok(human.stdout.includes('差异集中点： 接续保真'));
+  const missing = await captureCli(['diff', '--a', 'nope.json', '--b', 'b.json', '--json'], { cwd: wsDiff });
+  assert.equal(missing.code, 3);
+  parseFail(missing, 'FILE_NOT_FOUND');
+});
+
+await test('recall ranks judgments by relevance, recency and importance', async () => {
+  const wsRecall = await makeWorkspace('ws-recall');
+  await writeFixture(wsRecall, 'memory/judgments.md', makeJudgmentsV1([
+    ['J001', '迁移验证要双向', '只跑单向会漏', 'docs/a.md', '候选', '', ''],
+    ['J002', '压缩摘要要保留指针', '别名和路径要写清', 'docs/b.md', '常用', '002', ''],
+    ['J003', '检索按三要素', 'relevance recency importance', 'docs/c.md', '本能', 'J003', ''],
+  ]));
+  await writeFixture(wsRecall, 'memory/judgments-cards.md', [
+    '## J002 压缩摘要要保留指针',
+    '- why: 没有指针接续者找不到原文',
+    '- failure: 指针路径失效时更糟',
+    '- unfinished: 无',
+    '',
+    '## J003 检索按三要素',
+    '- why: 三要素是检索模型的骨架',
+    '- failure: 缺卡就不该被优先',
+    '- unfinished: 无',
+    '',
+  ].join('\n'));
+  await writeFixture(wsRecall, 'memory/hits.jsonl', [
+    '{"id":"J001","ts":"2026-11-09T11:00:00"}',
+    '{"id":"J001","ts":"2026-11-09T12:00:00"}',
+    '{"id":"J003","ts":"2026-11-09T11:30:00"}',
+  ].join('\n'));
+  const env = parseOk(await captureCli([
+    'recall', '--task', '压缩 指针', '--top', '3', '--json',
+  ], { cwd: wsRecall, now: new Date('2026-11-09T13:00:00Z') }), 'recall');
+  assert.equal(env.command, 'recall');
+  assert.equal(env.data.totalCandidates, 3);
+  assert.equal(env.data.candidates.length, 3);
+  const top = env.data.candidates[0];
+  assert.equal(top.id, 'J002');
+  assert.equal(top.scores.relevance, 1);
+  assert.equal(top.cardExists, true);
+  assert.equal(env.data.candidates.find((row) => row.id === 'J001').cardExists, false);
+  assert.equal(env.data.candidates.find((row) => row.id === 'J001').hits.count, 2);
+  const limited = parseOk(await captureCli([
+    'recall', '--task', '压缩 指针', '--top', '2', '--json',
+  ], { cwd: wsRecall, now: new Date('2026-11-09T13:00:00Z') }), 'recall-top');
+  assert.equal(limited.data.candidates.length, 2);
+  const human = await captureCli(['recall', '压缩 指针'], { cwd: wsRecall, now: new Date('2026-11-09T13:00:00Z') });
+  assert.equal(human.code, 0);
+  assert.ok(human.stdout.includes('J002'));
+  assert.ok(human.stdout.includes('R='));
+});
+
+await test('check reports schema violations with line numbers and exits 1', async () => {
+  const wsCheck = await makeWorkspace('ws-check');
+  await writeFixture(wsCheck, 'memory/judgments.md', [
+    '# judgments',
+    '',
+    '| id | conclusion | boundary | source | status | card | updated |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    '| J001 | 合法候选 | 边界 | docs/a.md | 候选 |  |  |',
+    '| J002 | 常用但缺卡 | 边界 | docs/b.md | 常用 |  |  |',
+    '| J003 | 状态非法 | 边界 | docs/c.md | 已废 |  |  |',
+    '| J616 | 新行无指针 | 边界 | docs/d.md | 候选 |  | 2026-11-09 |',
+    '| J004 | 列少 | 边界 | docs/e.md | 候选 | 卡 |',
+    '',
+  ].join('\n'));
+  const run = await captureCli(['check', '--json'], { cwd: wsCheck });
+  assert.equal(run.code, 1);
+  const env = JSON.parse(run.stdout);
+  assert.equal(env.command, 'check');
+  assert.equal(env.data.checked, 5);
+  assert.equal(env.data.violationCount, 4);
+  assert.deepEqual(env.data.violations.map((violation) => violation.line), [6, 7, 8, 9]);
+  assert.ok(env.data.violations.some((violation) => violation.message.includes('缺卡')));
+  assert.ok(env.data.violations.some((violation) => violation.message.includes('status 非法')));
+  assert.ok(env.data.violations.some((violation) => violation.message.includes('指针格式')));
+  assert.ok(env.data.violations.some((violation) => violation.message.includes('列数')));
+
+  const wsClean = await makeWorkspace('ws-check-clean');
+  await writeFixture(wsClean, 'memory/judgments.md', makeJudgmentsV1([
+    ['J001', '合法候选', '边界', 'docs/a.md', '候选', '', ''],
+    ['J002', '合法常用', '边界', 'docs/b.md', '常用', '002', ''],
+  ]));
+  const clean = await captureCli(['check', '--json'], { cwd: wsClean });
+  assert.equal(clean.code, 0);
+  const cleanEnv = JSON.parse(clean.stdout);
+  assert.equal(cleanEnv.data.violationCount, 0);
+  const human = await captureCli(['check'], { cwd: wsClean });
+  assert.equal(human.code, 0);
+  assert.ok(human.stdout.includes('检查 2 行，违规 0 条'));
+});
+
+await test('new agent tools and slash commands expose diff / recall / check', async () => {
+  const wsTools = await makeWorkspace('ws-tools-portability');
+  await writeFixture(wsTools, 'a.json', JSON.stringify({
+    total: 10,
+    items: [{ name: 'x', score: 5, weight: 10 }],
+  }));
+  await writeFixture(wsTools, 'b.json', JSON.stringify({
+    total: 8,
+    items: [{ name: 'x', score: 3, weight: 10 }],
+  }));
+  const definitions = createToolDefinitions({
+    resolveWorkspace: async () => ({ workspaceRoot: wsTools, memoryDir: 'memory' }),
+    now: () => new Date('2026-11-09T08:10:00Z'),
+  });
+  assert.equal(definitions.length, 8);
+  const diffTool = definitions.find((definition) => definition.name === 'dsh_self_diff');
+  const recallTool = definitions.find((definition) => definition.name === 'dsh_self_recall');
+  const checkTool = definitions.find((definition) => definition.name === 'dsh_self_check');
+  assert.ok(diffTool && recallTool && checkTool);
+  const diffValue = await diffTool.execute({ a: 'a.json', b: 'b.json' }, {
+    agent: { id: 'agent-diff' }, signal: new AbortController().signal,
+  });
+  assert.equal(diffValue.ok, true);
+  assert.equal(diffValue.data.focused_loss, 'x');
+  assert.equal(diffValue.data.items[0].diff_rate_pct, 20);
+
+  const { context, registrations } = makeFakeCtx(wsTools);
+  apply(context, { memoryDir: 'memory', commands: true, tools: false });
+  const commandNames = registrations.commands.map((definition) => definition.name);
+  for (const name of ['self-diff', 'self-recall', 'self-check']) assert.ok(commandNames.includes(name));
 });
 
 // ---------------------------------------------------------------------------
@@ -767,11 +925,11 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.3.0');
+  assert.equal(pkg.version, '0.4.0');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.3.0'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.4.0'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.3.0]'));
+  assert.ok(changelog.includes('[0.4.0]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
@@ -828,20 +986,20 @@ function makeFakeCtx(workspaceDir) {
   return { context, registrations, disposers };
 }
 
-await test('plugin apply registers 5 commands + 5 tools and owns their effects', async () => {
+await test('plugin apply registers 8 commands + 8 tools and owns their effects', async () => {
   const wsPlugin = await makeWorkspace('ws-plugin');
   const { context, registrations, disposers } = makeFakeCtx(wsPlugin);
   apply(context, { memoryDir: 'memory', commands: true, tools: true });
-  assert.equal(registrations.commands.length, 5);
-  assert.equal(registrations.tools.length, 5);
-  assert.equal(disposers.length, 10);
+  assert.equal(registrations.commands.length, 8);
+  assert.equal(registrations.tools.length, 8);
+  assert.equal(disposers.length, 16);
   assert.deepEqual(
     registrations.commands.map((definition) => definition.name).sort(),
-    ['self-handoff', 'self-init', 'self-judge', 'self-review', 'self-ruler'],
+    ['self-check', 'self-diff', 'self-handoff', 'self-init', 'self-judge', 'self-recall', 'self-review', 'self-ruler'],
   );
   assert.deepEqual(
     registrations.tools.map((definition) => definition.name).sort(),
-    ['dsh_self_handoff', 'dsh_self_init', 'dsh_self_judge', 'dsh_self_review', 'dsh_self_ruler'],
+    ['dsh_self_check', 'dsh_self_diff', 'dsh_self_handoff', 'dsh_self_init', 'dsh_self_judge', 'dsh_self_recall', 'dsh_self_review', 'dsh_self_ruler'],
   );
   for (const definition of registrations.commands) {
     assert.equal(typeof definition.description, 'string');
@@ -943,12 +1101,12 @@ await test('config can disable one surface and defaults are normalized', async (
   const onlyCommands = makeFakeCtx(wsPlugin);
   apply(onlyCommands.context, { tools: false });
   assert.equal(onlyCommands.registrations.tools.length, 0);
-  assert.equal(onlyCommands.registrations.commands.length, 5);
+  assert.equal(onlyCommands.registrations.commands.length, 8);
 
   const onlyTools = makeFakeCtx(wsPlugin);
   apply(onlyTools.context, { commands: false });
   assert.equal(onlyTools.registrations.commands.length, 0);
-  assert.equal(onlyTools.registrations.tools.length, 5);
+  assert.equal(onlyTools.registrations.tools.length, 8);
 
   const normalized = normalizeConfig({ hotMaxChars: 'not-a-number', contextBudgetChars: 1000, tools: false });
   assert.equal(normalized.hotMaxChars, PLUGIN_DEFAULTS.hotMaxChars);
@@ -1510,7 +1668,7 @@ await test('agent tool and slash command expose self-ruler', async () => {
 
   const { context, registrations } = makeResolvingCtx(() => undefined);
   apply(context, { memoryDir: 'memory', commands: true, tools: false });
-  assert.equal(registrations.commands.length, 5);
+  assert.equal(registrations.commands.length, 8);
   const command = registrations.commands.find((entry) => entry.name === 'self-ruler');
   assert.ok(command);
   const result = await command.handler({

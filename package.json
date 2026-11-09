@@ -1,7 +1,7 @@
 {
   "name": "qing-self",
-  "version": "0.3.0",
-  "description": "Scaffold for layered agent memory: memory files, judgment cards, full/compact model handoff, two-question ruler and compression review. Format-locked, zero-dependency, JSON-first.",
+  "version": "0.4.0",
+  "description": "Scaffold for layered agent memory: memory files, judgment cards, full/compact model handoff, two-question ruler, compression review, portability diff, three-factor recall and schema check. Format-locked, zero-dependency, JSON-first.",
   "license": "MIT",
   "author": "malabananclauss-rgb",
   "homepage": "https://github.com/malabananclauss-rgb/qing-self#readme",

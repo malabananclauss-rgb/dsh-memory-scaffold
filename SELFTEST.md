@@ -1,11 +1,11 @@
-﻿# SELFTEST — qing-self 0.3.0
+﻿# SELFTEST — qing-self 0.4.0
 
-日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问；0.2.0 改名 dsh-memory-scaffold；0.3.0 改名 qing-self）
-包版本：0.3.0 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
+日期：2026-11-08（初版）／2026-11-09（写操作红线加固；0.1.5 工作目录解析；0.1.6 compact handoff/--focus；0.1.7 独特两问；0.2.0 改名 dsh-memory-scaffold；0.3.0 改名 qing-self；0.4.0 diff/recall/check）
+包版本：0.4.0 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
 环境：Windows，DeepSeek Harness 自带 Node **v24.21.0**（`C:\Users\Lenovo\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）
 测试目录：`D:\DSH\products\dsh-self\test\.tmp`（测试结束已清理）
 
-> 结论：**59/59 自动化用例通过**；五个命令 + `--json` 真实进程端到端通过；
+> 结论：**63/63 自动化用例通过**；八个命令 + `--json` 真实进程端到端通过；
 > 在真实手写老库（323 判断 / 12 卡 / 28 索引，**只读**）上验证兼容修复：
 > pending 从 269 条压成 3 组（267 条候选聚合成 1 条），JSON 输出 2972 B，
 > 无 `undefined`/非 lossless 值，失效指针误报 0。
@@ -17,7 +17,8 @@
 > 0.1.7 新增：`ruler` / `/self-ruler` / `dsh_self_ruler`——独特两问（可迁移性/可接续性），本地模板＋关键词启发式，零模型调用、不写文件；输出两条具体追问＋可复制提示词＋最大风险点。
 > 0.2.0 改名：package/仓库名 `dsh-self` → `dsh-memory-scaffold`（npm `dsh-self` 被占）；CLI 二进制、斜杠命令、工具名、`.dsh-self/` 目录与 format schema 保持不变。
 > 0.3.0 改名：`dsh-memory-scaffold` → `qing-self`；CLI/format 继续不变。
-> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.3.0 代码。
+> 0.4.0 新增：`diff` / `recall` / `check` 三命令（只读、零模型调用、不联网）+ 插件 8 命令 / 8 工具；selftest 63/63。
+> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.4.0 代码。
 
 ---
 
@@ -40,7 +41,7 @@
 node test/selftest.mjs        # EXIT=0
 ```
 
-结果：`dsh-self selftest: 59/59 passed`，`SELFTEST_EXIT=0`。
+结果：`dsh-self selftest: 63/63 passed`，`SELFTEST_EXIT=0`。
 测试在进程内调用 CLI（DSH 沙箱禁止带管道的子进程 stdio，见 §6），并直接单测
 `lib/format.js`、`lib/core.js`、`lib/json-safe.js`、`lib/plugin.js`、`index.js`。
 
@@ -51,14 +52,15 @@ node test/selftest.mjs        # EXIT=0
 | judge | 6 | 必填/非法 status/未初始化/自动编号双表/转义与多行/坏表头 |
 | handoff | 3 | .md+8 问+.json 侧车；`--out`；未初始化 |
 | review | 6 | 健康结构；hot >800 字/2KB 双告警＋`--fail-on-warn`；上下文占比；失效指针；formatVersion 拒绝；未初始化 |
-| CLI 表面 | 3 | 人类输出；help/version/未知项；四命令 `--json` 信封一致性 |
+| CLI 表面 | 3 | 人类输出；help/version/未知项；各命令 `--json` 信封一致性 |
 | 格式工具 | 2 | 表格转义往返；字符数/ID/枚举/日期戳 |
 | **老库兼容（0.1.1）** | 2 | 5 列旧表＋中文状态＋中文卡字段＋多指针 index＋无 manifest；大 pending 聚合 |
 | **lossless JSON（0.1.1）** | 1 | undefined 丢弃、NaN→null、Date→ISO、可往返 |
 | **版本/文档一致性（0.1.1）** | 1 | package=0.1.1=version.js=CHANGELOG，FORMAT 文档含旧格式说明 |
-| 插件注册层 | 3 | apply 注册 4 命令+4 工具并持有 effect；斜杠命令实跑核心；Agent 工具 execute/render；config 关单侧 |
+| 插件注册层 | 3 | apply 注册 8 命令+8 工具并持有 effect；斜杠命令实跑核心；Agent 工具 execute/render；config 关单侧 |
 | **写操作红线（0.1.2 加固）** | 1 | `captureCli` 对 init/judge/handoff 强制 cwd 在 `test/.tmp`；`D:/DSH`、`D:/DSH/memory`、产品 `memory/` 被 guard 拒绝；只读 review 不受限 |
 | **独特两问 ruler（0.1.7）** | 8 | 两问结构/具体追问引用输入/可复制提示词/风险启发式/位置参数与空输入 USAGE/无记忆目录可用不写文件/英文输出/超长输入截断/工具与斜杠命令透传 |
+| **迁移验证命令（0.4.0）** | 4 | diff A→B 总分/逐项差异率/集中点；recall 三要素排序与 top；check 违规行号/退出码/clean；新工具与斜杠命令注册 |
 | **compact handoff + --focus（0.1.6）** | 8 | compact 体积 ≤10 KB、方向/hot/活判断/聚焦卡/未完成/验证问题结构、完整模式不变且更大、--focus 每主题≤2 卡去重/未匹配、--focus 必须配 --compact（USAGE）、大库预算裁剪、缺 my-direction 容错、agent 工具与斜杠命令透传 |
 | **工作目录解析（0.1.5）** | 6 | 无服务+无候选→DIRECTORY_UNAVAILABLE（断言不回退宿主 cwd）；session.header.cwd 回退；ensure 抛错回退；服务目录优先；延迟挂载服务重试（非一次性 ctx.get）；已解析目录无 scaffold→NOT_INITIALIZED（错误码分离） |
 
@@ -184,8 +186,8 @@ node bin/dsh-self.mjs review --workspace D:\DSH --json   # 只读真实库
 
 ## 11. 遗留 / 交给青
 
-1. **重启/重载 Host** 让 0.2.0 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
+1. **重启/重载 Host** 让 0.4.0 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
 2. 重启后在真实 profile 再跑一次 `/self-review` 或 `dsh_self_review`，确认工具层同样不再报
    "not lossless JSON"、pending 输出为聚合后的短 JSON。
-3. 发布：npm/GitHub Release `v0.2.0` 与 CHANGELOG 对齐（市场提交由青决定）。
+3. 发布：npm/GitHub Release `v0.4.0` 与 CHANGELOG 对齐（本轮不发布；市场提交由青决定）。
 4. 已知限制不变：无自动注入、占比为估算、单写者、手动模板合并、仅 format v1；老库 5 列表只读（写入需手工升级表头）。

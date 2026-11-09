@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0]
+
+- **New command `diff`**: compare two score JSON files (`{"total":…,"items":[{name,score,weight}]}`) and report total delta/difference rate, per-item difference rate (`|b−a|/weight×100`), focused loss, and the A→B direction. Direction is asymmetric; run with A/B swapped for the reverse. Read-only, no model calls.
+- **New command `recall`**: rank judgments from `judgments.md` by relevance (query terms matching conclusion + boundary), recency (`hits.jsonl` latest time/count) and importance (status + card existence); returns top N with the three component scores. Read-only, no model calls.
+- **New command `check`**: validate the fixed 7-column judgment schema, status enum (Chinese statuses or canonical candidate/common/instinct), cards required for common/instinct, and pointer format for J616+ rows; reports violation count and line numbers. Read-only; exits 1 on violations.
+- All three commands support `--json`, are exposed as `/self-*` slash commands and `dsh_self_*` agent tools; 8 commands + 8 tools total. No network, no writes, no model calls.
+
 ## [0.3.0]
 
 - **Renamed again:** `dsh-self` → `dsh-memory-scaffold` (v0.2.0) → **`qing-self`** (v0.3.0). The npm name `qing-self` is available; `qing` is occupied.

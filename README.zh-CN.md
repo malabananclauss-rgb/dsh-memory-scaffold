@@ -1,13 +1,13 @@
-﻿# qing-self · 半个体化脚手架
+# qing-self · 半个体化脚手架
 
-> 给 DSH 上的 agent / 角色一键装上**分层记忆＋判断卡＋转生交接＋压缩审查**的**结构**。
+> 给 DSH 上的 agent / 角色一键装上**分层记忆＋判断卡＋转生交接＋压缩审查＋迁移差异验证**的**结构**。
 > 只给格式和流程，不给内容：没有别人的真实判断、没有私人记忆、没有任何暗桩。
 
 > **已改名：** `dsh-self` → `dsh-memory-scaffold`（v0.2.0）→ **`qing-self`**（v0.3.0）。CLI 二进制仍是 `dsh-self`；斜杠命令、Agent 工具、`.dsh-self/` 路径与 format schema 都不变。
 
 - 零依赖、不联网、不调用 LLM、不做向量检索
 - 全部是纯 markdown / JSON，任何编辑器可读、可 diff、可迁移
-- 5 个命令全部支持 `--json`，文件格式公开锁定 —— 其他插件可以直接读、可以直接接
+- 8 个命令全部支持 `--json`，文件格式公开锁定 —— 其他插件可以直接读、可以直接接
 - 模板版本化（`template=v1.0.0`＋CHANGELOG），升级不覆盖用户文件
 
 ## 30 秒装好
@@ -30,7 +30,7 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 
 **「我知道要让 AI 有记忆连续性，但不知道该建哪些文件、每个文件放什么、什么时候写、什么时候压、换模型时交什么。」**
 
-这个包卖的不是记忆内容，是**记忆的骨架和流程**：四个文件、五个动作，照着做就能从"每次重新解释自己"变成"分层记忆＋可验证交接"。
+这个包卖的不是记忆内容，是**记忆的骨架和流程**：四个文件、八个动作，照着做就能从"每次重新解释自己"变成"分层记忆＋可验证交接"。
 
 ## 它给什么
 
@@ -41,6 +41,9 @@ DSH 上已经有大量记忆类插件（存储、检索、右侧栏 UI、自动�
 | `handoff` | 读你的记忆，生成「接续包」文档＋ **8 个验证问题**，并写一份同名 `.json` 侧车文件给其他插件读。换模型／换会话前跑。`--compact` 出 6–10 KB 紧凑版（方向+hot+活判断精简+按 `--focus` 选卡+未完成+验证问题）；`--focus` 按主题挑判断卡。 |
 | `review` | 压缩审查：hot 大小（>800 字 / 2KB 告警）、上下文占比提示、待落盘项清单、判断库/卡一致性、失效索引指针、模板版本漂移。 |
 | `ruler` | 独特两问：把一条判断变成两条针对性的具体追问（① 换一个版本的我来用还成立吗＝可迁移性 ② 明天全忘后还能被捡回来吗＝可接续性）＋可直接复制的提示词＋最大风险点。**本地模板＋关键词启发式，零模型调用、不联网、不写文件。** |
+| `diff` | **迁移差异验证（A→B）**：比较两份评分 JSON（`{"total":…,"items":[{name,score,weight}]}`），输出总分差／总分差异率、逐项差异率（`|b−a|/weight×100`）、差异集中点与方向。方向不对称，互换 A/B 再跑一次。只读。 |
+| `recall` | **三要素检索**：从 `judgments.md` 按 relevance（查询词命中结论＋边界）、recency（`hits.jsonl` 最近时间/次数）、importance（状态＋卡是否存在）打分排序，输出 top N 与三要素分数。只读，零模型调用。 |
+| `check` | **schema 校验**：固定 7 列、状态枚举（中英文 canonical 均可）、常用/本能必须有卡、J616+ 新行必须是指针格式；输出违规数与行号，有违规退出码 1。只读。 |
 
 ### 独特两问：可迁移性 × 可接续性（零模型调用）
 
@@ -73,7 +76,7 @@ DSH 里用 `/self-ruler` 或 `dsh_self_ruler` 工具，用法相同。**不调�
 1. **格式锁定（软锁定）**：目录结构、表头列名与列序、状态枚举、卡字段名、机器标记全部写进
    `docs/FORMAT.md`。第三方插件想兼容就只能按这个格式读写——这形成事实标准，但**不加密、不做暗桩、不写排他逻辑**：用户随时可以搬走、手改、迁移。
 2. **版本化模板**：每个模板带 `template=v1.0.0 format=1` 标记，`manifest.templateVersion` 记录安装版本，`CHANGELOG.md` ＋ GitHub Release 作为迭代与迁移通道。升级不覆盖用户文件，靠 `review` 提示＋手动合并，避免"升级毁记忆"。
-3. **生态钩子（我们当 hub）**：5 个命令的 `--json` 信封、handoff 的 JSON 侧车、可导入的格式解析器
+3. **生态钩子（我们当 hub）**：8 个命令的 `--json` 信封、handoff 的 JSON 侧车、可导入的格式解析器
    （`qing-self/format`）＋ `docs/ECOSYSTEM.md`。别的插件（会话启动提示、压缩闸门、交接消费者、面板、看板）可以只读地接上来，而不需要复制我们的实现。
 4. **不给内容**：只给结构和流程模板。对用户诚实（红线：不欺骗），也让它能和任何记忆存储插件叠加而不是冲突——存储归别人，判断层归这里。
 
@@ -99,7 +102,7 @@ dsh plugin --profile web add https://github.com/malabananclauss-rgb/qing-self/re
 node bin/dsh-self.mjs init
 ```
 
-**方式 C — npm**：包名已改为 `qing-self`；如果 registry 上还没发布，请用上面的 GitHub 安装。
+**方式 C — npm**：还没发布；请用上面的 GitHub 安装。
 
 ## 快速开始
 
@@ -128,12 +131,21 @@ dsh-self ruler --situation "我该不该接这个任务？谁承担代价？"
 
 # 6. 每周或压缩前
 node bin/dsh-self.mjs review
+
+# 7. 迁移验证：两份评分 JSON 双向对比
+node bin/dsh-self.mjs diff --a score-a.json --b score-b.json
+
+# 8. 按任务检索最相关判断
+node bin/dsh-self.mjs recall --task "怎么验证迁移" --top 5
+
+# 9. 校验判断库 schema（有违规退出码 1）
+node bin/dsh-self.mjs check --json
 ```
 
 ## 命令参考
 
 ```
-dsh-self <init|judge|handoff|review|ruler> [options]
+dsh-self <init|judge|handoff|review|ruler|diff|recall|check> [options]
 ```
 
 通用：`-w/--workspace <dir>`（默认当前目录）、`--dir <name>`（记忆目录，默认 `memory`）、
@@ -146,17 +158,20 @@ dsh-self <init|judge|handoff|review|ruler> [options]
 | `handoff` | `--out <file.md>`（可选；默认 `memory/handoffs/handoff-<时间戳>.md`）；`--compact` 紧凑版（目标 6–10 KB）；`--focus 主题1,主题2` 按卡标题→结论→正文匹配，每主题最多 2 张卡，只能配 `--compact` |
 | `review` | `--context-budget <字符数>`、`--fail-on-warn`（CI 用，有可操作告警时退出码 1） |
 | `ruler` | `--situation <处境/决策>`（也可直接跟一句话）、`--context <补充背景>`、`--lang zh\|en` |
+| `diff` | 必填 `--a <A.json>`、`--b <B.json>` |
+| `recall` | `--task <描述>`（也可直接跟一句话）、`--top 5`（默认 5，最多 100） |
+| `check` | 无参数（读记忆目录） |
 
-退出码：`0` 成功；`1` `--fail-on-warn`；`2` 用法错误；`3` 运行/格式错误。
+退出码：`0` 成功；`1` `review --fail-on-warn` 或 `check` 有违规；`2` 用法错误；`3` 运行/格式错误。
 完整 JSON 契约见 `docs/ECOSYSTEM.md`。
 
 ## DSH 集成
 
 装上插件后：
 
-- 斜杠命令：`/self-init`、`/self-judge`、`/self-handoff`、`/self-review`、`/self-ruler`（参数同 CLI，去掉 `--workspace/--dir`，用当前 agent 的工作区）
-- Agent 工具：`dsh_self_init`、`dsh_self_judge`、`dsh_self_handoff`、`dsh_self_review`、`dsh_self_ruler`
-- 工具会占一点提示词空间（5 个 schema）。只想用斜杠命令的话，在行 config 里设 `tools: false`。
+- 斜杠命令：`/self-init`、`/self-judge`、`/self-handoff`、`/self-review`、`/self-ruler`、`/self-diff`、`/self-recall`、`/self-check`（参数同 CLI，去掉 `--workspace/--dir`，用当前 agent 的工作区）
+- Agent 工具：`dsh_self_init`、`dsh_self_judge`、`dsh_self_handoff`、`dsh_self_review`、`dsh_self_ruler`、`dsh_self_diff`、`dsh_self_recall`、`dsh_self_check`
+- 工具会占一点提示词空间（8 个 schema）。只想用斜杠命令的话，在行 config 里设 `tools: false`。
 
 行配置（`cordis.patch.yml` 的 `config`，可被用户 patch 覆盖）：
 

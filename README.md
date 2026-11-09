@@ -1,7 +1,8 @@
-﻿# qing-self
+# qing-self
 
 > A scaffold that gives a DSH agent or role **layered memory + judgment cards +
-> model handoff + compression review** in one command — structure only, no content.
+> model handoff + compression review + A→B portability diff** in one command —
+> structure only, no content.
 > No third-party judgments, no private memories, no hidden behavior.
 
 > **Renamed:** `dsh-self` → `dsh-memory-scaffold` (v0.2.0) → **`qing-self`** (v0.3.0). The CLI binary is still `dsh-self`; slash commands, agent tools, `.dsh-self/` paths and format schemas are unchanged.
@@ -35,7 +36,7 @@ which files to keep, what goes in each, when to write, when to compact, and what
 to hand over when switching models.
 
 This package is not another store. It is the **skeleton and ritual**: four files,
-five operations, and a machine-readable contract that other plugins can integrate
+eight operations, and a machine-readable contract that other plugins can integrate
 with.
 
 ## What you get
@@ -47,6 +48,9 @@ with.
 | `handoff` | Reads your memory, writes a continuation package plus **8 verification questions**, and a machine-readable `.json` sidecar for other plugins. Run it before switching model or session. `--compact` emits a 6–10 KB package (direction + hot + condensed live judgments + `--focus` cards + pending + questions); `--focus` selects judgment cards by topic. |
 | `review` | Compression review: hot size (>800 chars / >2 KB warning), context-share estimate, not-yet-persisted items, judgments/cards consistency, broken index pointers, template drift. |
 | `ruler` | The two-question ruler: turns a judgment into two concrete follow-ups — would it survive another version of me (transferability), and could it be recovered if I forgot everything tomorrow (continuability) — plus a copyable prompt for any AI and the biggest risk. Local template + keyword heuristic — **zero model calls, no network, no writes**. |
+| `diff` | **Portability difference (A→B)**: compares two score JSON files (`{"total":…,"items":[{name,score,weight}]}`) and reports total delta / difference rate, per-item difference rate (`|b−a|/weight×100`), focused loss, and direction. Direction is asymmetric — swap A/B for the reverse. Read-only. |
+| `recall` | **Three-factor retrieval**: ranks judgments from `judgments.md` by relevance (query terms matching conclusion + boundary), recency (`hits.jsonl` latest time/count) and importance (status + card existence); returns top N with component scores. Read-only, no model calls. |
+| `check` | **Schema check**: validates the fixed 7-column judgment table, status enum (Chinese statuses or canonical candidate/common/instinct), cards required for common/instinct, and pointer format for J616+ rows. Reports violation count + line numbers; exits 1 on violations. Read-only. |
 
 ### Two-question ruler: transferability × continuability (no model calls)
 
@@ -91,7 +95,7 @@ write any memory file — the judgment stays yours (or the AI you paste it into)
    `template=v1.0.0 format=1`; `manifest.templateVersion` records what was
    installed; `CHANGELOG.md` + GitHub Releases are the upgrade path. Upgrades
    never overwrite user files — `review` reports drift and the user merges.
-3. **Ecosystem hook (we are the hub)**: the `--json` envelope on all five
+3. **Ecosystem hook (we are the hub)**: the `--json` envelope on all eight
    commands, the handoff JSON sidecar, importable format parsers
    (`qing-self/format`) and `docs/ECOSYSTEM.md`. Other plugins (session-start
    pointer, compaction gate, handoff consumer, panels, dashboards) can read
@@ -123,8 +127,7 @@ an installable bundle and never edits your profile.
 node bin/dsh-self.mjs init
 ```
 
-**C — npm**: not published yet (the unscoped `dsh-self` name is occupied by another
-project); use the GitHub install above.
+**C — npm**: not published yet; use the GitHub install above.
 
 ## Quick start
 
@@ -154,12 +157,21 @@ node bin/dsh-self.mjs ruler --situation "Should I take this task? Who bears the 
 
 # 6. weekly or before compaction
 node bin/dsh-self.mjs review
+
+# 7. portability: compare two score JSONs in both directions
+node bin/dsh-self.mjs diff --a score-a.json --b score-b.json
+
+# 8. retrieve the most relevant judgments for a task
+node bin/dsh-self.mjs recall --task "怎么验证迁移" --top 5
+
+# 9. validate the judgment schema (exit 1 on violations)
+node bin/dsh-self.mjs check --json
 ```
 
 ## Command reference
 
 ```
-dsh-self <init|judge|handoff|review|ruler> [options]
+dsh-self <init|judge|handoff|review|ruler|diff|recall|check> [options]
 ```
 
 Common: `-w/--workspace <dir>` (default: cwd), `--dir <name>` (memory directory,
@@ -172,20 +184,23 @@ default `memory`), `--json`, `-h/--help`, `--version`.
 | `handoff` | `--out <file.md>` (default `memory/handoffs/handoff-<timestamp>.md`); `--compact` compact package (target 6–10 KB); `--focus topic1,topic2` matches card titles → judgment conclusions → card bodies, max 2 cards per topic, requires `--compact` |
 | `review` | `--context-budget <chars>`, `--fail-on-warn` (CI: exit 1 on actionable warnings) |
 | `ruler` | `--situation <text>` (or pass it positionally), `--context <text>`, `--lang zh|en` |
+| `diff` | required: `--a <A.json>` `--b <B.json>` |
+| `recall` | `--task <text>` (or pass it positionally), `--top 5` (default 5, max 100) |
+| `check` | no options (reads the memory directory) |
 
-Exit codes: `0` success; `1` `--fail-on-warn`; `2` usage; `3` runtime/format.
+Exit codes: `0` success; `1` `review --fail-on-warn` or `check` with violations; `2` usage; `3` runtime/format.
 The full JSON contract is in `docs/ECOSYSTEM.md`.
 
 ## DSH integration
 
 With the bundle installed:
 
-- slash commands: `/self-init`, `/self-judge`, `/self-handoff`, `/self-review`, `/self-ruler`
+- slash commands: `/self-init`, `/self-judge`, `/self-handoff`, `/self-review`, `/self-ruler`, `/self-diff`, `/self-recall`, `/self-check`
   (same options as the CLI minus `--workspace`/`--dir`; they use the agent's
   workspace)
-- agent tools: `dsh_self_init`, `dsh_self_judge`,
-  `dsh_self_handoff`, `dsh_self_review`, `dsh_self_ruler`
-- tools cost a little prompt space (five schemas). For slash-commands-only use,
+- agent tools: `dsh_self_init`, `dsh_self_judge`, `dsh_self_handoff`, `dsh_self_review`, `dsh_self_ruler`,
+  `dsh_self_diff`, `dsh_self_recall`, `dsh_self_check`
+- tools cost a little prompt space (eight schemas). For slash-commands-only use,
   set `tools: false` in the row config.
 
 Row config (the bundle patch's `config`; users can override it):

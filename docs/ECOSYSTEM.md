@@ -1,4 +1,4 @@
-﻿# qing-self ecosystem API (formerly dsh-self / dsh-memory-scaffold; CLI binary: dsh-self)
+# qing-self ecosystem API (formerly dsh-self / dsh-memory-scaffold; CLI binary: dsh-self)
 
 `--json` is the public interface. The on-disk format is the storage contract
 (`docs/FORMAT.md`). Both are versioned: the envelope carries `formatVersion`,
@@ -20,7 +20,7 @@ Guiding rules for consumers:
 ## 1. CLI contract
 
 ```
-dsh-self <init|judge|handoff|review|ruler> [options] --json
+dsh-self <init|judge|handoff|review|ruler|diff|recall|check> [options] --json
 ```
 
 Global options: `--workspace <dir>`, `--dir <memory-dir>`, `--json`,
@@ -29,14 +29,16 @@ for `handoff` they are `--out <file.md>`, `--compact`, and `--focus <topic1,topi
 (`--focus` requires `--compact`; using it alone is a `USAGE` error). For `ruler`
 they are `--situation <text>`, `--context <text>`, and `--lang zh|en`; the situation may
 also be passed positionally. `ruler` is stateless: it needs no initialized memory, makes
-no model calls and writes no files.
+no model calls and writes no files. `diff` needs `--a <A.json>` and `--b <B.json>`;
+`recall` takes `--task <text>` (or positional) and `--top 5`; `check` takes no
+command-specific options. All three are read-only.
 
 ### Exit codes
 
 | Code | Meaning |
 | --- | --- |
 | `0` | Success (warnings may be present in the envelope). |
-| `1` | `review --fail-on-warn` and at least one actionable warning. |
+| `1` | `review --fail-on-warn` and at least one actionable warning; or `check` found schema violations. |
 | `2` | Usage error (`USAGE`): bad/unknown option, missing required value, invalid enum. |
 | `3` | Runtime/format error: `NOT_INITIALIZED`, `DIRECTORY_UNAVAILABLE`, `FORMAT_MISMATCH`, `BAD_MANIFEST`, `UNSUPPORTED_FORMAT`, `INTERNAL`. |
 
@@ -52,7 +54,7 @@ thrown to stderr in JSON mode).
   "formatVersion": 1,
   "templateVersion": "1.0.0",
   "latestTemplateVersion": "1.0.0",
-  "toolVersion": "0.1.1",
+  "toolVersion": "0.4.0",
   "workspace": "D:\\work",
   "memoryRoot": "D:\\work\\memory",
   "generatedAt": "2026-11-08T13:00:00.000Z",
@@ -80,7 +82,7 @@ thrown to stderr in JSON mode).
   "formatVersion": 1,
   "templateVersion": "1.0.0",
   "latestTemplateVersion": "1.0.0",
-  "toolVersion": "0.1.1",
+  "toolVersion": "0.4.0",
   "created": ["memory/hot/state.md", "…"],
   "existing": [],
   "updated": [],
@@ -198,7 +200,7 @@ when one exists, otherwise `zh`.
   "formatVersion": 1,
   "templateVersion": "1.0.0",
   "latestTemplateVersion": "1.0.0",
-  "toolVersion": "0.1.1",
+  "toolVersion": "0.4.0",
   "generatedAt": "2026-11-08T13:00:00.000Z"
 }
 ```
@@ -206,13 +208,70 @@ when one exists, otherwise `zh`.
 `status`: `ok` when no actionable warning, `warn` otherwise. `context.level`:
 `ok` | `notice` | `warn` (thresholds from `manifest.settings`).
 
+### `diff`
+
+Compares two score JSON documents in the A→B direction. Each item is
+`{name, score, weight}`; `weight` is the full-credit denominator.
+
+```json
+{
+  "direction": "A→B",
+  "a": { "path": "a.json", "total": 82.5 },
+  "b": { "path": "b.json", "total": 74 },
+  "total": { "a": 82.5, "b": 74, "delta": -8.5 },
+  "total_diff_rate_pct": 8.5,
+  "items": [ { "name": "接续保真", "a": 20, "b": 15, "weight": 25, "diff_rate_pct": 20 } ],
+  "focused_loss": "接续保真",
+  "note": "方向不对称：…"
+}
+```
+
+`diff_rate_pct = |b−a| / weight × 100`. `total_diff_rate_pct` is the absolute
+total-score difference in points (same convention as `TL\bench_diff.py`); swap
+A/B and run again for the reverse direction.
+
+### `recall`
+
+Ranks judgments by three normalized factors: `relevance` (query terms matching
+`conclusion + boundary`), `recency` (`hits.jsonl` latest timestamp/count), and
+`importance` (status + card existence). Default weights are 0.5 / 0.3 / 0.2;
+`--top` is 5 by default.
+
+```json
+{
+  "task": "怎么验证迁移",
+  "top": 5,
+  "totalCandidates": 3,
+  "candidates": [ {
+    "id": "J002", "conclusion": "…", "status": "common",
+    "scores": { "relevance": 1, "recency": 0, "importance": 0.76, "total": 0.652 },
+    "hits": { "count": 0, "lastHit": null, "ageDays": null },
+    "cardExists": true
+  } ]
+}
+```
+
+### `check`
+
+Validates the fixed 7-column judgment table, status enum (Chinese statuses or
+canonical `candidate`/`common`/`instinct`), card presence for common/instinct,
+and pointer format (`任务=…预期=…结果=…`) for J616+ rows. Exit code 1 when
+`violationCount > 0`.
+
+```json
+{
+  "status": "fail", "checked": 5, "violationCount": 2,
+  "violations": [ { "line": 7, "id": "J003", "message": "status 非法: \"已废\"" } ]
+}
+```
+
 ## 3. Machine vocabularies
 
 Warning codes: `HOT_OVERSIZE`, `HOT_BYTES_OVERSIZE`, `HOT_MISSING`,
 `JUDGMENTS_MISSING`, `CARDS_MISSING`, `MANIFEST_MISSING`,
 `TEMPLATE_UPGRADE_AVAILABLE`, `CARD_COUNT_MISMATCH`, `JUDGMENTS_FORMAT_ISSUE`,
 `JUDGMENTS_FORMAT_ISSUES`, `INDEX_FORMAT_ISSUE`, `CONTEXT_SHARE_HIGH`,
-`DIRECTION_MISSING`, `RULER_INPUT_TRUNCATED`.
+`DIRECTION_MISSING`, `RULER_INPUT_TRUNCATED`, `HITS_PARSE_ISSUE`.
 
 Pending item types: `hot_todo`, `candidate_judgment`, `missing_card`,
 `orphan_card`, `incomplete_card`, `broken_pointer`, `no_handoff`,
@@ -220,7 +279,7 @@ Pending item types: `hot_todo`, `candidate_judgment`, `missing_card`,
 
 Error codes: `USAGE`, `NOT_INITIALIZED`, `DIRECTORY_UNAVAILABLE`,
 `FORMAT_MISMATCH`, `LEGACY_FORMAT_READ_ONLY`, `BAD_MANIFEST`,
-`UNSUPPORTED_FORMAT`, `INTERNAL`.
+`UNSUPPORTED_FORMAT`, `FILE_NOT_FOUND`, `BAD_SCORE_JSON`, `INTERNAL`.
 
 `DIRECTORY_UNAVAILABLE` (plugin surfaces only — slash commands / agent tools):
 workspace resolution failed. The `workingDirectory` service was unavailable or
@@ -255,7 +314,7 @@ tables, Chinese status aliases, Chinese card labels, multi-pointer index cells
 
 ## 4. DSH surfaces
 
-When the bundle is installed, the same five commands are available without the
+When the bundle is installed, the same eight commands are available without the
 CLI:
 
 | CLI | DSH slash command | Agent tool |
@@ -265,6 +324,9 @@ CLI:
 | `handoff` | `/self-handoff` | `dsh_self_handoff` |
 | `review` | `/self-review` | `dsh_self_review` |
 | `ruler` | `/self-ruler` | `dsh_self_ruler` |
+| `diff` | `/self-diff` | `dsh_self_diff` |
+| `recall` | `/self-recall` | `dsh_self_recall` |
+| `check` | `/self-check` | `dsh_self_check` |
 
 Slash commands accept the same options (without `--workspace`/`--dir`: they use
 the agent's workspace). Agent tools take the same fields as tool arguments and
