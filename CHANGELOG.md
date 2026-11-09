@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3]
+
+- **handoff: validation record.** Every package now includes a machine-check section
+  (hot size vs limits, judgment/card parse status, format issues, warnings, unverified note)
+  so the next session knows what was checked and what must be re-checked with `review`.
+- **handoff: UNKNOWN rule.** The discontinuity note now requires unread/unverified content to be
+  marked `UNKNOWN` and filled in from the source, never invented.
+- **handoff: capacity governance.** Warning `HANDOFF_LARGE` when the package exceeds 64 KB and
+  `HANDOFF_HISTORY_LARGE` when `handoffs/` holds more than 10 packages (keep the recent ones,
+  archive the rest). Mirrors the bounded-snapshot rule used by project handoff skills.
+- JSON sidecar gains a `validation` block.
+
+
 ## [0.1.2]
 
 - **fix(tools): workspace discovery after a host restart.** When the `workingDirectory`
@@ -9,6 +22,11 @@
 - **fix(review):** `CARD_COUNT_MISMATCH` compared the total judgment count with the card
   count. It now reports only *common/instinct* judgments that lack a card; candidates need
   no card.
+- **test(write-guard):** added `assertTempWriteWorkspace()` and a regression case: every
+  file-writing CLI call (`init`/`judge`/`handoff`) and the plugin working directory must
+  stay inside `test/.tmp`; `D:/DSH`, `D:/DSH/memory` and the package `memory/` are refused.
+  Reason: a 2026-11-09 debugging session pointed `judge --workspace D:\DSH` at the live
+  memory; the accidental row/card was removed and the guard prevents a repeat.
 
 
 All notable changes to the dsh-self package and its scaffold templates.

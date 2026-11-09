@@ -177,12 +177,14 @@ HTML 注释是文档；解析器必须忽略注释内内容（模板里的示例
 
 1. 头部：`generated_at`、工具/模板/格式版本、统计、读序；
 2. 状态快照：`hot/state.md` 原文；
-3. 判断索引：`id | conclusion | status | source`；
-4. 判断卡：`### <id> <标题>`＋卡字段；
+3. 判断索引：`id | conclusion | status | source` —— **只展开「常用/本能」这类活判断**，候选只给计数
+   （`- candidate_rows: N`），保证接续包体积有界；
+4. 判断卡：`### <id> <标题>`＋卡字段 —— 只展开活判断的卡，其余只给计数（`- other_cards: N`）；
 5. 未完成/待落盘项；
 6. 8 个验证问题；
 7. 由高位判断生成的重演题；
-8. 断代诚实标注与接续包历史。
+8. **验证记录**：机器检查（hot 是否超限、判断/卡解析、格式问题、警告码、「无人工验收」声明）；
+9. 断代诚实标注与接续包历史 —— 没读到/没确认的一律标 `UNKNOWN`，不许编造。
 
 问题文案不属于锁定内容（小版本可改进）；**数量（8）与位置**属于锁定。
 
@@ -197,6 +199,7 @@ hot { chars, bytes, lines, text },
 judgments [ { id, conclusion, boundary, source, status, card, updated } ],
 cards [ { id, title, fields { ... } } ],
 index [ { trigger, pointer, note } ],
+validation { hotWithinLimits, judgmentsFormatIssues, warningCodes },
 pending [ { type, detail, ... } ],          // 可能已聚合（count/sample）
 pendingTotal,                               // 原始待落盘条目数
 verificationQuestions [ 8 个字符串 ],

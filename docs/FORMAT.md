@@ -233,12 +233,17 @@ Filename pattern (in `handoffs/`): `handoff-YYYYMMDD-HHmmss.md` (local time;
 
 1. header: `generated_at`, tool/template/format versions, stats, read order;
 2. state snapshot: verbatim `hot/state.md`;
-3. judgment index: `id | conclusion | status | source`;
-4. judgment cards: `### <id> <title>` plus card fields;
+3. judgment index: `id | conclusion | status | source` — **only common/instinct rows are
+   expanded**; candidates are counted (`- candidate_rows: N`) to keep the package bounded;
+4. judgment cards: `### <id> <title>` plus card fields — only cards of expanded
+   (common/instinct) judgments; the rest are counted (`- other_cards: N`);
 5. unfinished / not-yet-persisted items;
 6. eight verification questions;
 7. replay questions generated from top judgments;
-8. honest discontinuity note and handoff history.
+8. **validation record**: machine checks (hot size vs limits, judgment/card parse status,
+   format issues, warning codes, "no human sign-off" note);
+9. honest discontinuity note and handoff history — unread/unverified content must be marked
+   `UNKNOWN`, never invented.
 
 The question texts are not part of the lock (they may be improved in a minor
 release); their **count (8)** and position are.
@@ -254,6 +259,7 @@ hot { chars, bytes, lines, text },
 judgments [ { id, conclusion, boundary, source, status, card, updated } ],
 cards [ { id, title, fields { ... } } ],
 index [ { trigger, pointer, note } ],
+validation { hotWithinLimits, judgmentsFormatIssues, warningCodes },
 pending [ { type, detail, ... } ],          // may be aggregated (count/sample)
 pendingTotal,                               // raw pending item count
 verificationQuestions [ 8 strings ],

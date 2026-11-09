@@ -1,17 +1,18 @@
-# SELFTEST — dsh-self 0.1.1
+# SELFTEST — dsh-self 0.1.2
 
-日期：2026-11-08（Asia/Shanghai）
-包版本：0.1.1 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
+日期：2026-11-08（初版）／2026-11-09（写操作红线加固）
+包版本：0.1.2 · 格式：format v1 · 模板：template v1.0.0（模板无变更）
 环境：Windows，DeepSeek Harness 自带 Node **v24.21.0**（`C:\Users\Lenovo\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe`）
 测试目录：`D:\DSH\products\dsh-self\test\.tmp`（测试结束已清理）
 
-> 结论：**36/36 自动化用例通过**；四个命令 + `--json` 真实进程端到端通过；
+> 结论：**37/37 自动化用例通过**；四个命令 + `--json` 真实进程端到端通过；
 > 在真实手写老库（323 判断 / 12 卡 / 28 索引，**只读**）上验证兼容修复：
 > pending 从 269 条压成 3 组（267 条候选聚合成 1 条），JSON 输出 2972 B，
 > 无 `undefined`/非 lossless 值，失效指针误报 0。
 > 0.1.1 新增：老库 5 列表/中文状态/中文卡字段/多指针 index 兼容；pending 聚合；
 > `LEGACY_FORMAT_READ_ONLY`；lossless JSON 兜底。
-> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.1.1 代码。
+> 0.1.2 加固：写操作红线——文件写入用例只许跑在 test/.tmp，真实记忆目录（D:\DSH、D:\DSH\memory）被 guard 直接拒绝（见 §10）。
+> 未做（按权限）：不装/不启用插件、不改 profile；Host 进程需重启才能加载 0.1.1/0.1.2 代码。
 
 ---
 
@@ -34,7 +35,7 @@
 node test/selftest.mjs        # EXIT=0
 ```
 
-结果：`dsh-self selftest: 36/36 passed`，`SELFTEST_EXIT=0`。
+结果：`dsh-self selftest: 37/37 passed`，`SELFTEST_EXIT=0`。
 测试在进程内调用 CLI（DSH 沙箱禁止带管道的子进程 stdio，见 §6），并直接单测
 `lib/format.js`、`lib/core.js`、`lib/json-safe.js`、`lib/plugin.js`、`index.js`。
 
@@ -51,6 +52,7 @@ node test/selftest.mjs        # EXIT=0
 | **lossless JSON（0.1.1）** | 1 | undefined 丢弃、NaN→null、Date→ISO、可往返 |
 | **版本/文档一致性（0.1.1）** | 1 | package=0.1.1=version.js=CHANGELOG，FORMAT 文档含旧格式说明 |
 | 插件注册层 | 3 | apply 注册 4 命令+4 工具并持有 effect；斜杠命令实跑核心；Agent 工具 execute/render；config 关单侧 |
+| **写操作红线（0.1.2 加固）** | 1 | `captureCli` 对 init/judge/handoff 强制 cwd 在 `test/.tmp`；`D:/DSH`、`D:/DSH/memory`、产品 `memory/` 被 guard 拒绝；只读 review 不受限 |
 
 ## 3. 真实老库验证（只读）
 
@@ -161,14 +163,21 @@ node bin/dsh-self.mjs review --workspace D:\DSH --json   # 只读真实库
 
 - 写入：仅 `D:\DSH\products\dsh-self\`；测试临时目录已清理。未写 `D:\DSH\memory`、
   未写 `C:\Users\Lenovo\.dsh` profile、未改计划任务/服务/注册表。
-- 真实用户记忆：只读（`review` 不写文件；未跑 handoff/judge/init）。
+- 真实用户记忆：只读（`review` 不写文件）；**例外/事故与加固见下一条**。
+- **2026-11-09 写操作事故（已自查清理，青已抽查通过）**：调试时误把
+  `dsh-self judge --workspace D:\DSH` 指向真实记忆，写入 1 行 judgments＋1 张卡；
+  cards 残留已用精确脚本删除（28,452→28,339 B，64 卡，无 `J585 x`/`- why: y` 痕迹），
+  judgments 行已被并发写入覆盖、无残留。加固：`assertTempWriteWorkspace()` 强制
+  所有写命令的 cwd 在 `test/.tmp` 内，`D:/DSH`、`D:/DSH/memory`、产品 `memory/`
+  直接拒绝；新增回归用例（§2 写操作红线）。**规则：任何会写文件的测试（judge/init/handoff/publish）
+  必须跑临时目录，严禁指向真实记忆目录；真实记忆只读。**
 - 插件状态：未安装/未启用/未停用任何插件（`plugin_manager` 未调用）；未重启 Host。
 - 网络/子体：无下载、无安装、未开子智能体。
 
 ## 11. 遗留 / 交给青
 
-1. **重启/重载 Host** 让 0.1.1 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
+1. **重启/重载 Host** 让 0.1.1/0.1.2 代码在真实 profile 生效（插件目录未变，仍是 `D:\DSH\products\dsh-self`）。
 2. 重启后在真实 profile 再跑一次 `/self-review` 或 `dsh_self_review`，确认工具层同样不再报
    "not lossless JSON"、pending 输出为聚合后的短 JSON。
-3. 发布：npm/GitHub Release `v0.1.1` 与 CHANGELOG 对齐（市场提交由青决定）。
+3. 发布：npm/GitHub Release `v0.1.2` 与 CHANGELOG 对齐（市场提交由青决定）。
 4. 已知限制不变：无自动注入、占比为估算、单写者、手动模板合并、仅 format v1；老库 5 列表只读（写入需手工升级表头）。

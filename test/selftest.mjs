@@ -58,6 +58,11 @@ async function readJson(file) {
 }
 
 async function captureCli(args, { cwd = TMP_ROOT, now = FIXED_NOW } = {}) {
+  // Regression guard (2026-11-09): file-writing CLI calls must never target a
+  // real memory directory. A test once pointed `judge --workspace D:\DSH` at the
+  // live memory and polluted it; this guard makes that fail before any write.
+  const command = Array.isArray(args) ? args[0] : '';
+  if (WRITE_COMMANDS.has(command)) assertTempWriteWorkspace(cwd, `CLI ${command}`);
   const stdout = [];
   const stderr = [];
   const originalLog = console.log;
@@ -88,6 +93,35 @@ function parseFail(run, code) {
   return parsed;
 }
 
+// `init`, `judge` and `handoff` write files; `review` is read-only.
+const WRITE_COMMANDS = new Set(['init', 'judge', 'handoff']);
+
+// Paths that must never be used as a write target by a test.
+const FORBIDDEN_WRITE_ROOTS = [
+  path.resolve('D:/DSH/memory'),
+  path.resolve('D:/DSH'),
+];
+
+/**
+ * 写操作红线（2026-11-09 事故后加）：任何会写文件的用例只能跑在测试临时目录
+ * `test/.tmp/selftest-*` 内；真实记忆目录（D:/DSH、D:/DSH/memory 等）只读。
+ */
+function assertTempWriteWorkspace(dir, label = 'write operation') {
+  const resolved = path.resolve(dir);
+  const relative = path.relative(TMP_ROOT, resolved);
+  const insideTemp = relative === ''
+    || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  assert.ok(
+    insideTemp,
+    `${label} must run inside the temp workspace ${TMP_ROOT}; refusing ${resolved}. `
+    + 'Never point init/judge/handoff at a real memory directory.',
+  );
+  for (const forbidden of FORBIDDEN_WRITE_ROOTS) {
+    assert.notEqual(resolved.toLowerCase(), forbidden.toLowerCase(), `${label} must not target real memory ${forbidden}`);
+  }
+  return resolved;
+}
+
 async function makeWorkspace(name) {
   const dir = path.join(TMP_ROOT, name);
   await mkdir(dir, { recursive: true });
@@ -101,7 +135,7 @@ async function makeWorkspace(name) {
 await test('package.json declares an installable DSH bundle', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
   assert.equal(pkg.name, 'dsh-self');
-  assert.equal(pkg.version, '0.1.2');
+  assert.equal(pkg.version, '0.1.3');
   assert.equal(pkg.type, 'module');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml');
@@ -123,7 +157,7 @@ await test('display resources exist and are valid', async () => {
   const icon = await readFile(path.join(PACKAGE_ROOT, 'icon.svg'), 'utf8');
   assert.ok(icon.trimStart().startsWith('<svg'));
   assert.ok(icon.includes('</svg>'));
-  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.2'));
+  assert.ok((await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8')).includes('0.1.3'));
 });
 
 await test('versioned templates exist for zh and en', async () => {
@@ -341,7 +375,9 @@ await test('handoff writes a package, a JSON sidecar and 8 questions', async () 
   const doc = await readFile(env.data.path, 'utf8');
   assert.ok(doc.includes('8 个验证问题'));
   assert.ok(doc.includes('## 1. 状态快照'));
-  assert.ok(doc.includes('## 7. 断代诚实标注'));
+  assert.ok(doc.includes('## 8. 断代诚实标注'));
+assert.ok(doc.includes('## 7. 验证记录'));
+assert.ok(doc.includes('UNKNOWN'));
   assert.ok(doc.includes('J001'));
   assert.ok(doc.includes('memory/hot/state.md') === false || true);
   assert.ok(doc.includes('接续包'));
@@ -493,7 +529,7 @@ await test('--help, --version and unknown options behave', async () => {
   assert.ok(help.stdout.includes('--json'));
   const version = await captureCli(['--version']);
   assert.equal(version.code, 0);
-  assert.ok(version.stdout.includes('0.1.2'));
+  assert.ok(version.stdout.includes('0.1.3'));
   const unknownCommand = await captureCli(['nope']);
   assert.equal(unknownCommand.code, 2);
   const unknownFlag = await captureCli(['review', '--bogus', '--json'], { cwd: ws });
@@ -549,7 +585,7 @@ await test('format helpers expose the locked metrics', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 7b. real legacy library compatibility (regression for 0.1.2)
+// 7b. real legacy library compatibility (regression for 0.1.3)
 // ---------------------------------------------------------------------------
 
 async function writeFixture(root, relative, text) {
@@ -730,15 +766,40 @@ await test('lossless JSON sanitizer removes undefined / NaN values', async () =>
 
 await test('package version, CHANGELOG and format docs agree', async () => {
   const pkg = await readJson(path.join(PACKAGE_ROOT, 'package.json'));
-  assert.equal(pkg.version, '0.1.2');
+  assert.equal(pkg.version, '0.1.3');
   const versionSource = await readFile(path.join(PACKAGE_ROOT, 'lib', 'version.js'), 'utf8');
-  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.2'"));
+  assert.ok(versionSource.includes("TOOL_VERSION = '0.1.3'"));
   const changelog = await readFile(path.join(PACKAGE_ROOT, 'CHANGELOG.md'), 'utf8');
-  assert.ok(changelog.includes('[0.1.2]'));
+  assert.ok(changelog.includes('[0.1.3]'));
   const formatDoc = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.md'), 'utf8');
   assert.ok(/legacy|5-column/i.test(formatDoc));
   const formatDocZh = await readFile(path.join(PACKAGE_ROOT, 'docs', 'FORMAT.zh-CN.md'), 'utf8');
   assert.ok(formatDocZh.includes('旧格式'));
+});
+
+await test('write-operation guard keeps file writes inside the temp workspace', async () => {
+  assert.throws(() => assertTempWriteWorkspace('D:/DSH/memory'), /temp workspace/);
+  assert.throws(() => assertTempWriteWorkspace('D:/DSH'), /temp workspace/);
+  assert.throws(() => assertTempWriteWorkspace(path.join(PACKAGE_ROOT, 'memory')), /temp workspace/);
+  assert.doesNotThrow(() => assertTempWriteWorkspace(path.join(TMP_ROOT, 'ws-guard')));
+  await assert.rejects(
+    () => captureCli(['init', '--json'], { cwd: 'D:/DSH/memory' }),
+    /temp workspace/,
+  );
+  await assert.rejects(
+    () => captureCli([
+      'judge', '--conclusion', 'x', '--why', 'y', '--failure', 'z',
+      '--unfinished', 'u', '--source', 's', '--json',
+    ], { cwd: 'D:/DSH/memory' }),
+    /temp workspace/,
+  );
+  await assert.rejects(
+    () => captureCli(['handoff', '--json'], { cwd: 'D:/DSH' }),
+    /temp workspace/,
+  );
+  // Read-only `review` is not restricted by the write guard.
+  const readOnly = await captureCli(['review', '--json'], { cwd: path.join(PACKAGE_ROOT, 'docs') });
+  assert.equal(typeof readOnly.code, 'number');
 });
 
 // ---------------------------------------------------------------------------
@@ -757,7 +818,7 @@ function makeFakeCtx(workspaceDir) {
         return { register: (definition) => { registrations.tools.push(definition); return () => {}; } };
       }
       if (name === 'workingDirectory') {
-        return { ensure: async () => workspaceDir };
+        return { ensure: async () => assertTempWriteWorkspace(workspaceDir, 'plugin workingDirectory') };
       }
       return undefined;
     },
